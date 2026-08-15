@@ -32,7 +32,20 @@ const INITIAL_SITE_CONFIG = {
   phone: '(0205) 3885.6789',
   email: 'thcsdongtan.huulung@langson.edu.vn',
   logoUrl: '/images/school-logo.jpg',
-  bannerBg: '/images/school-banner.png'
+  bannerBg: '/images/school-banner.png',
+
+  // Ban Giám Hiệu Leadership Photos & Names
+  principalName: 'Thầy Hiệu Trưởng - THCS Đồng Tân',
+  principalTitle: 'Hiệu Trưởng Nhà Trường',
+  principalAvatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&q=80',
+
+  vicePrincipal1Name: 'Cô Phó Hiệu Trưởng - THCS Đồng Tân',
+  vicePrincipal1Title: 'Phó Hiệu Trưởng Chuyên Môn',
+  vicePrincipal1Avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&q=80',
+
+  vicePrincipal2Name: 'Thầy Phó Hiệu Trưởng - CSVC',
+  vicePrincipal2Title: 'Phó Hiệu Trưởng Cơ Sở Vật Chất',
+  vicePrincipal2Avatar: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&q=80'
 };
 
 // Initial Fallback Data

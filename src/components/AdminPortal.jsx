@@ -63,7 +63,20 @@ export default function AdminPortal({
     phone: siteConfig.phone || '(0205) 3885.6789',
     email: siteConfig.email || 'thcsdongtan.huulung@langson.edu.vn',
     logoUrl: siteConfig.logoUrl || '/images/school-logo.jpg',
-    bannerBg: siteConfig.bannerBg || '/images/school-banner.png'
+    bannerBg: siteConfig.bannerBg || '/images/school-banner.png',
+
+    // Ban Giám Hiệu Leadership Photos & Names
+    principalName: siteConfig.principalName || 'Thầy Hiệu Trưởng - THCS Đồng Tân',
+    principalTitle: siteConfig.principalTitle || 'Hiệu Trưởng Nhà Trường',
+    principalAvatar: siteConfig.principalAvatar || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&q=80',
+
+    vicePrincipal1Name: siteConfig.vicePrincipal1Name || 'Cô Phó Hiệu Trưởng - THCS Đồng Tân',
+    vicePrincipal1Title: siteConfig.vicePrincipal1Title || 'Phó Hiệu Trưởng Chuyên Môn',
+    vicePrincipal1Avatar: siteConfig.vicePrincipal1Avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&q=80',
+
+    vicePrincipal2Name: siteConfig.vicePrincipal2Name || 'Thầy Phó Hiệu Trưởng - CSVC',
+    vicePrincipal2Title: siteConfig.vicePrincipal2Title || 'Phó Hiệu Trưởng Cơ Sở Vật Chất',
+    vicePrincipal2Avatar: siteConfig.vicePrincipal2Avatar || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&q=80'
   });
 
   // User Management State
@@ -917,8 +930,68 @@ export default function AdminPortal({
             </div>
           </div>
 
-          <button type="submit" style={{ background: '#16a34a', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
-            <Save size={16} /> 💾 LƯU THAY ĐỔI THÔNG TIN TRƯỜNG & BANNER
+          {/* Ban Giám Hiệu Leadership Management Box */}
+          <div style={{ background: 'white', padding: '18px', borderRadius: '8px', border: '1px solid #cbd5e1', marginTop: '10px' }}>
+            <h4 style={{ fontSize: '14.5px', color: '#0056a6', marginBottom: '14px', fontWeight: '800', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              🏛️ QUẢN LÝ THAY ẢNH CHÂN DUNG & HỌ TÊN BAN GIÁM HIỆU
+            </h4>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
+              {/* Hiệu Trưởng */}
+              <div style={{ border: '1px solid #cbd5e1', padding: '12px', borderRadius: '6px', background: '#f0f9ff' }}>
+                <h5 style={{ fontSize: '13px', color: '#0284c7', margin: '0 0 8px 0', fontWeight: '700' }}>⭐ Thầy/Cô Hiệu Trưởng</h5>
+                <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                  <img src={configState.principalAvatar} alt="" style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #0284c7' }} />
+                </div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', marginBottom: '2px' }}>Họ và Tên Hiệu Trưởng:</label>
+                <input type="text" value={configState.principalName} onChange={(e) => setConfigState({ ...configState, principalName: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', marginBottom: '6px' }} placeholder="Họ và tên..." />
+                
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', marginBottom: '2px' }}>Chức danh:</label>
+                <input type="text" value={configState.principalTitle} onChange={(e) => setConfigState({ ...configState, principalTitle: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', marginBottom: '6px' }} placeholder="Hiệu Trưởng..." />
+
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', marginBottom: '2px' }}>Tải ảnh chân dung từ máy tính:</label>
+                <input type="file" onChange={(e) => handleFileUpload(e.target.files[0], (url) => setConfigState({ ...configState, principalAvatar: url }))} style={{ fontSize: '11px', marginBottom: '4px', width: '100%' }} />
+                <input type="text" value={configState.principalAvatar} onChange={(e) => setConfigState({ ...configState, principalAvatar: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px' }} placeholder="Hoặc dán Link URL ảnh chân dung..." />
+              </div>
+
+              {/* Phó Hiệu Trưởng 1 */}
+              <div style={{ border: '1px solid #cbd5e1', padding: '12px', borderRadius: '6px', background: '#ffffff' }}>
+                <h5 style={{ fontSize: '13px', color: '#0056a6', margin: '0 0 8px 0', fontWeight: '700' }}>👨‍🏫 Phó Hiệu Trưởng Chuyên Môn</h5>
+                <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                  <img src={configState.vicePrincipal1Avatar} alt="" style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #0056a6' }} />
+                </div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', marginBottom: '2px' }}>Họ và Tên Phó Hiệu Trưởng 1:</label>
+                <input type="text" value={configState.vicePrincipal1Name} onChange={(e) => setConfigState({ ...configState, vicePrincipal1Name: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', marginBottom: '6px' }} placeholder="Họ và tên..." />
+                
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', marginBottom: '2px' }}>Chức danh:</label>
+                <input type="text" value={configState.vicePrincipal1Title} onChange={(e) => setConfigState({ ...configState, vicePrincipal1Title: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', marginBottom: '6px' }} placeholder="Phó Hiệu Trưởng..." />
+
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', marginBottom: '2px' }}>Tải ảnh chân dung từ máy tính:</label>
+                <input type="file" onChange={(e) => handleFileUpload(e.target.files[0], (url) => setConfigState({ ...configState, vicePrincipal1Avatar: url }))} style={{ fontSize: '11px', marginBottom: '4px', width: '100%' }} />
+                <input type="text" value={configState.vicePrincipal1Avatar} onChange={(e) => setConfigState({ ...configState, vicePrincipal1Avatar: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px' }} placeholder="Hoặc dán Link URL ảnh chân dung..." />
+              </div>
+
+              {/* Phó Hiệu Trưởng 2 */}
+              <div style={{ border: '1px solid #cbd5e1', padding: '12px', borderRadius: '6px', background: '#ffffff' }}>
+                <h5 style={{ fontSize: '13px', color: '#16a34a', margin: '0 0 8px 0', fontWeight: '700' }}>🏫 Phó Hiệu Trưởng CSVC / Tổ Trưởng</h5>
+                <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                  <img src={configState.vicePrincipal2Avatar} alt="" style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #16a34a' }} />
+                </div>
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', marginBottom: '2px' }}>Họ và Tên Phó Hiệu Trưởng 2:</label>
+                <input type="text" value={configState.vicePrincipal2Name} onChange={(e) => setConfigState({ ...configState, vicePrincipal2Name: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', marginBottom: '6px' }} placeholder="Họ và tên..." />
+                
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', marginBottom: '2px' }}>Chức danh:</label>
+                <input type="text" value={configState.vicePrincipal2Title} onChange={(e) => setConfigState({ ...configState, vicePrincipal2Title: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '12px', marginBottom: '6px' }} placeholder="Phó Hiệu Trưởng..." />
+
+                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', marginBottom: '2px' }}>Tải ảnh chân dung từ máy tính:</label>
+                <input type="file" onChange={(e) => handleFileUpload(e.target.files[0], (url) => setConfigState({ ...configState, vicePrincipal2Avatar: url }))} style={{ fontSize: '11px', marginBottom: '4px', width: '100%' }} />
+                <input type="text" value={configState.vicePrincipal2Avatar} onChange={(e) => setConfigState({ ...configState, vicePrincipal2Avatar: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px' }} placeholder="Hoặc dán Link URL ảnh chân dung..." />
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" style={{ background: '#16a34a', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', marginTop: '10px' }}>
+            <Save size={16} /> 💾 LƯU THAY ĐỔI CẤU HÌNH TRƯỜNG & ẢNH BAN GIÁM HIỆU
           </button>
         </form>
       )}
