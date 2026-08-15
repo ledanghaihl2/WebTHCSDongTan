@@ -286,7 +286,7 @@ INSERT INTO public.categories (id, name, slug, icon) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO public.users (id, username, password, full_name, role, email, status) VALUES
-(1, 'admin', '$2a$10$84J.N1i1JvCjJmI/K2D/Me1M.Kx7XG1t3VnS3bK7V9tL.u8.k1u.', 'Thầy Hiệu Trưởng - THCS Đồng Tân', 'BGH', 'bgh.thcsdongtan@langson.edu.vn', 'ACTIVE'),
+(1, 'admin', 'admindt', 'Thầy Hiệu Trưởng - THCS Đồng Tân', 'BGH', 'bgh.thcsdongtan@langson.edu.vn', 'ACTIVE'),
 (2, 'giaovien', '$2a$10$84J.N1i1JvCjJmI/K2D/Me1M.Kx7XG1t3VnS3bK7V9tL.u8.k1u.', 'Cô Nguyễn Thị Hoa - Giáo Viên Văn', 'GIAO_VIEN', 'hoanguyen@thcsdongtan.edu.vn', 'ACTIVE')
 ON CONFLICT (id) DO NOTHING;
 
