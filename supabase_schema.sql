@@ -192,6 +192,15 @@ UPDATE public.users SET role = 'GIAO_VIEN' WHERE role = 'TEACHER';
 UPDATE public.users SET role = 'HOC_SINH' WHERE role = 'STUDENT';
 UPDATE public.users SET role = 'PHU_HUYNH' WHERE role = 'PARENT';
 
+-- Làm sạch các đường dẫn ảnh bìa không hợp lệ trong bảng albums và articles
+UPDATE public.albums 
+SET cover = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80'
+WHERE cover IS NULL OR cover = '' OR (cover NOT LIKE 'http%' AND cover NOT LIKE 'data:%');
+
+UPDATE public.articles 
+SET image = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&q=80'
+WHERE image IS NULL OR image = '' OR (image NOT LIKE 'http%' AND image NOT LIKE 'data:%');
+
 -- -------------------------------------------------------------------------
 -- PHẦN 2: BẬT BẢO MẬT ROW LEVEL SECURITY (KHI BẢNG ĐÃ TỒN TẠI)
 -- -------------------------------------------------------------------------
