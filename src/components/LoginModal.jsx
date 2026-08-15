@@ -59,10 +59,16 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
         if (users && users.length > 0) {
           const u = users[0];
           const storedPw = localStorage.getItem('user_password_' + cleanUsername);
+          const activePassword = storedPw || u.password;
 
-          const isPwValid = (u.password === cleanPassword) ||
-                            (storedPw && storedPw === cleanPassword) ||
-                            (cleanPassword === 'admin123' && u.password && u.password.startsWith('$2a$'));
+          let isPwValid = false;
+          if (activePassword && activePassword !== '$2a$10$84J.N1i1JvCjJmI/K2D/Me1M.Kx7XG1t3VnS3bK7V9tL.u8.k1u.') {
+            // Mật khẩu đã đổi -> BẮT BUỘC gõ đúng mật khẩu mới (Mật khẩu cũ bị vô hiệu hóa)
+            isPwValid = (cleanPassword === activePassword);
+          } else {
+            // Chưa đổi -> Dùng mật khẩu mặc định
+            isPwValid = (cleanPassword === 'admin123');
+          }
 
           if (isPwValid) {
             const uStatus = u.status ? u.status.toUpperCase() : 'ACTIVE';
@@ -107,21 +113,30 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
       } catch (err) {}
 
       const storedPw = localStorage.getItem('user_password_' + cleanUsername);
-      const isCustomMatch = storedPw && cleanPassword === storedPw;
+      
+      let isMatched = false;
+      if (storedPw) {
+        // Đã đổi mật khẩu -> CHỈ chấp nhận mật khẩu mới! Mật khẩu cũ bị loại bỏ hoàn toàn
+        isMatched = (cleanPassword === storedPw);
+      } else {
+        // Chưa đổi -> Chấp nhận mật khẩu mặc định admin123
+        isMatched = (cleanPassword === 'admin123');
+      }
 
-      // Tài khoản mẫu cơ bản
-      if (cleanUsername === 'admin' && (cleanPassword === 'admin123' || cleanPassword === 'admin' || cleanPassword === 'admindt' || isCustomMatch)) {
-        authenticatedUser = { id: 1, username: 'admin', fullName: 'Thầy Hiệu Trưởng - THCS Đồng Tân', role: 'BGH', email: 'bgh.thcsdongtan@langson.edu.vn', status: 'ACTIVE' };
-      } else if (cleanUsername === 'giaovien' && (cleanPassword === 'admin123' || cleanPassword === 'giaovien' || isCustomMatch)) {
-        authenticatedUser = { id: 2, username: 'giaovien', fullName: 'Cô Nguyễn Thị Hoa - Giáo Viên Văn', role: 'GIAO_VIEN', email: 'hoanguyen@thcsdongtan.edu.vn', status: 'ACTIVE' };
-      } else if (cleanUsername === 'hocsinh01' && (cleanPassword === 'admin123' || cleanPassword === 'hocsinh' || isCustomMatch)) {
-        authenticatedUser = { id: 3, username: 'hocsinh01', fullName: 'Em Nguyễn Văn An - Học sinh 9A1', role: 'HOC_SINH', email: 'an.nguyen@thcsdongtan.edu.vn', status: 'ACTIVE' };
-      } else if (cleanUsername === 'phuhuynh01' && (cleanPassword === 'admin123' || cleanPassword === 'phuhuynh' || isCustomMatch)) {
-        authenticatedUser = { id: 4, username: 'phuhuynh01', fullName: 'Anh Trần Văn Bình (Phụ huynh em An 9A1)', role: 'PHU_HUYNH', email: 'binhtran@gmail.com', status: 'ACTIVE' };
-      } else if (cleanUsername === 'giaovien_toan' && (cleanPassword === 'admin123' || cleanPassword === 'giaovien' || isCustomMatch)) {
-        authenticatedUser = { id: 5, username: 'giaovien_toan', fullName: 'Cô Lê Thị Thu - Giáo Viên Toán', role: 'GIAO_VIEN', email: 'thule@thcsdongtan.edu.vn', status: 'ACTIVE' };
-      } else if (isCustomMatch) {
-        authenticatedUser = { id: Date.now(), username: cleanUsername, fullName: cleanUsername, role: 'GIAO_VIEN', email: '', status: 'ACTIVE' };
+      if (isMatched) {
+        if (cleanUsername === 'admin') {
+          authenticatedUser = { id: 1, username: 'admin', fullName: 'Thầy Hiệu Trưởng - THCS Đồng Tân', role: 'BGH', email: 'bgh.thcsdongtan@langson.edu.vn', status: 'ACTIVE' };
+        } else if (cleanUsername === 'giaovien') {
+          authenticatedUser = { id: 2, username: 'giaovien', fullName: 'Cô Nguyễn Thị Hoa - Giáo Viên Văn', role: 'GIAO_VIEN', email: 'hoanguyen@thcsdongtan.edu.vn', status: 'ACTIVE' };
+        } else if (cleanUsername === 'hocsinh01') {
+          authenticatedUser = { id: 3, username: 'hocsinh01', fullName: 'Em Nguyễn Văn An - Học sinh 9A1', role: 'HOC_SINH', email: 'an.nguyen@thcsdongtan.edu.vn', status: 'ACTIVE' };
+        } else if (cleanUsername === 'phuhuynh01') {
+          authenticatedUser = { id: 4, username: 'phuhuynh01', fullName: 'Anh Trần Văn Bình (Phụ huynh em An 9A1)', role: 'PHU_HUYNH', email: 'binhtran@gmail.com', status: 'ACTIVE' };
+        } else if (cleanUsername === 'giaovien_toan') {
+          authenticatedUser = { id: 5, username: 'giaovien_toan', fullName: 'Cô Lê Thị Thu - Giáo Viên Toán', role: 'GIAO_VIEN', email: 'thule@thcsdongtan.edu.vn', status: 'ACTIVE' };
+        } else if (storedPw) {
+          authenticatedUser = { id: Date.now(), username: cleanUsername, fullName: cleanUsername, role: 'GIAO_VIEN', email: '', status: 'ACTIVE' };
+        }
       }
     }
 

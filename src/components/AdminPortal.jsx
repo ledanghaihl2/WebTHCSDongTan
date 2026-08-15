@@ -424,12 +424,19 @@ export default function AdminPortal({
           const u = dbUsers[0];
           const storedPw = localStorage.getItem('user_password_' + cleanUser);
 
-          // Kiểm tra xem mật khẩu nhập khớp với CSDL Supabase, LocalStorage hoặc bcrypt mặc định
-          const isDbMatch = (u.password === cleanPw) || 
-                            (storedPw && storedPw === cleanPw) || 
-                            (cleanPw === 'admin123' && u.password && u.password.startsWith('$2a$'));
+          // Mật khẩu hiệu lực hiện tại: ưu tiên LocalStorage/Supabase nếu đã đổi -> mật khẩu cũ hoàn toàn không còn tác dụng
+          const activePassword = storedPw || u.password;
+          let isValid = false;
 
-          if (isDbMatch) {
+          if (activePassword && activePassword !== '$2a$10$84J.N1i1JvCjJmI/K2D/Me1M.Kx7XG1t3VnS3bK7V9tL.u8.k1u.') {
+            // Đã đổi mật khẩu -> BẮT BUỘC gõ ĐÚNG mật khẩu mới (Mật khẩu cũ admin123 bị vô hiệu hóa 100%)
+            isValid = (cleanPw === activePassword);
+          } else {
+            // Chưa từng đổi mật khẩu -> Dùng mật khẩu mặc định admin123
+            isValid = (cleanPw === 'admin123');
+          }
+
+          if (isValid) {
             let mappedRole = u.role ? u.role.toUpperCase() : 'GIAO_VIEN';
             if (mappedRole === 'ADMIN') mappedRole = 'BGH';
 
@@ -449,9 +456,19 @@ export default function AdminPortal({
 
     // 3. Fallback LocalStorage & Mật khẩu mẫu mặc định
     const storedPw = localStorage.getItem('user_password_' + cleanUser);
-    const isMatch = (storedPw && cleanPw === storedPw) ||
-                    (cleanUser === 'admin' && (cleanPw === 'admin123' || cleanPw === 'admindt')) ||
-                    (cleanUser === 'giaovien' && cleanPw === 'admin123');
+    let isMatch = false;
+
+    if (storedPw) {
+      // Đã đổi mật khẩu -> CHỈ CHẤP NHẬN mật khẩu mới! Mật khẩu cũ admin123 HOÀN TOÀN BỊ VÔ HIỆU HÓA!
+      isMatch = (cleanPw === storedPw);
+    } else {
+      // Chưa từng đổi mật khẩu -> Chấp nhận mật khẩu mặc định admin123
+      if (cleanUser === 'admin') {
+        isMatch = (cleanPw === 'admin123');
+      } else if (cleanUser === 'giaovien') {
+        isMatch = (cleanPw === 'admin123');
+      }
+    }
 
     if (isMatch) {
       const dummyUser = cleanUser === 'admin'
