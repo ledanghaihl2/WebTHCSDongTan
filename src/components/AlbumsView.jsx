@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { Image, Eye, Calendar, Sparkles } from 'lucide-react';
 
+const DEFAULT_ALBUM_COVER = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80';
+
+const getValidImageSrc = (src) => {
+  if (!src || src === '#' || src === 'file_attached' || (!src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:'))) {
+    return DEFAULT_ALBUM_COVER;
+  }
+  return src;
+};
+
 export default function AlbumsView({ albums = [] }) {
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -56,9 +65,17 @@ export default function AlbumsView({ albums = [] }) {
                 onClick={() => setSelectedImage(album)}
               >
                 <div style={{ position: 'relative' }}>
-                  <img src={album.cover} alt={album.title} style={{ width: '100%', height: '170px', objectFit: 'cover' }} />
+                  <img 
+                    src={getValidImageSrc(album.cover)} 
+                    alt={album.title} 
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = DEFAULT_ALBUM_COVER;
+                    }}
+                    style={{ width: '100%', height: '170px', objectFit: 'cover' }} 
+                  />
                   <span style={{ position: 'absolute', bottom: '8px', right: '8px', background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '11px', padding: '2px 8px', borderRadius: '10px' }}>
-                    📷 {album.photosCount} Ảnh
+                    📷 {album.photosCount || 1} Ảnh
                   </span>
                 </div>
                 <div style={{ padding: '12px' }}>
@@ -86,7 +103,15 @@ export default function AlbumsView({ albums = [] }) {
               <button className="close-btn" onClick={() => setSelectedImage(null)}>✕</button>
             </div>
             <div className="modal-body" style={{ textAlign: 'center' }}>
-              <img src={selectedImage.cover} alt={selectedImage.title} style={{ width: '100%', maxHeight: '450px', objectFit: 'contain', borderRadius: '6px', marginBottom: '15px' }} />
+              <img 
+                src={getValidImageSrc(selectedImage.cover)} 
+                alt={selectedImage.title} 
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = DEFAULT_ALBUM_COVER;
+                }}
+                style={{ width: '100%', maxHeight: '450px', objectFit: 'contain', borderRadius: '6px', marginBottom: '15px' }} 
+              />
               <p style={{ fontSize: '13.5px', color: '#1e293b' }}>{selectedImage.description}</p>
             </div>
           </div>

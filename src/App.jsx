@@ -240,6 +240,13 @@ export default function App() {
         supabase.from('users').select('*').order('id', { ascending: false })
       ]);
 
+      const isValidImageSrc = (src, fallback) => {
+        if (!src || src === '#' || src === 'file_attached' || (!src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:'))) {
+          return fallback;
+        }
+        return src;
+      };
+
       if (artData && artData.length > 0) {
         const mappedArticles = artData.map(a => ({
           id: a.id,
@@ -249,7 +256,7 @@ export default function App() {
           categoryName: a.category_name || 'Tin tức - Sự kiện',
           summary: a.summary,
           content: a.content,
-          image: a.image,
+          image: isValidImageSrc(a.image, 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&q=80'),
           fileUrl: a.file_url,
           externalLink: a.external_link,
           author: a.author,
@@ -309,8 +316,8 @@ export default function App() {
           id: a.id,
           title: a.title,
           date: a.date,
-          photosCount: a.photos_count,
-          cover: a.cover,
+          photosCount: a.photos_count || 1,
+          cover: isValidImageSrc(a.cover, 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80'),
           description: a.description,
           fileUrl: a.file_url,
           externalLink: a.external_link

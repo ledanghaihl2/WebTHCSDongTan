@@ -77,7 +77,9 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
           reader.readAsDataURL(item.file);
         });
 
-        const safeDbUrl = (dataUrl && dataUrl.length > 200000) ? item.name : dataUrl;
+        const defaultAlbumCover = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80';
+        const safeDbImageUrl = (dataUrl && (dataUrl.startsWith('http') || dataUrl.startsWith('/') || (dataUrl.startsWith('data:image') && dataUrl.length <= 200000))) ? dataUrl : defaultAlbumCover;
+        const safeDbFileUrl = (dataUrl && dataUrl.length <= 200000) ? dataUrl : item.name;
 
         if (bulkType === 'resources') {
           batchItemsToInsert.push({
@@ -87,7 +89,7 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
             author: defaultAuthor,
             date: new Date().toLocaleDateString('vi-VN'),
             downloads: 0,
-            file_url: safeDbUrl,
+            file_url: safeDbFileUrl,
             file_name: item.name,
             external_link: ''
           });
@@ -98,7 +100,7 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
             category: defaultDocCategory,
             issue_date: new Date().toLocaleDateString('vi-VN'),
             signer: defaultSigner,
-            file_url: safeDbUrl,
+            file_url: safeDbFileUrl,
             file_name: item.name,
             external_link: ''
           });
@@ -107,9 +109,9 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
             title: item.title || item.name,
             date: new Date().toLocaleDateString('vi-VN'),
             photos_count: 1,
-            cover: safeDbUrl,
+            cover: safeDbImageUrl,
             description: item.title,
-            file_url: safeDbUrl,
+            file_url: safeDbFileUrl,
             external_link: ''
           });
         }
