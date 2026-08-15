@@ -201,6 +201,9 @@ UPDATE public.articles
 SET image = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&q=80'
 WHERE image IS NULL OR image = '' OR (image NOT LIKE 'http%' AND image NOT LIKE 'data:%');
 
+-- Cập nhật mật khẩu mặc định/mới cho tài khoản admin
+UPDATE public.users SET password = 'admindt' WHERE username = 'admin';
+
 -- -------------------------------------------------------------------------
 -- PHẦN 2: BẬT BẢO MẬT ROW LEVEL SECURITY (KHI BẢNG ĐÃ TỒN TẠI)
 -- -------------------------------------------------------------------------
