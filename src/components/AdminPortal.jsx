@@ -14,6 +14,8 @@ export default function AdminPortal({
   newsList = [],
   documents = [],
   resources = [],
+  albums = [],
+  videos = [],
   pendingUsers = [],
   onApproveUser,
   onRejectUser,
@@ -23,6 +25,10 @@ export default function AdminPortal({
   onDeleteDocument,
   onUpdateResource,
   onDeleteResource,
+  onUpdateAlbum,
+  onDeleteAlbum,
+  onUpdateVideo,
+  onDeleteVideo,
   onRefreshData,
   onOpenChangePassword
 }) {
@@ -33,6 +39,11 @@ export default function AdminPortal({
   const [adminTab, setAdminTab] = useState('users');
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
+
+  // States chỉnh sửa cho Albums, Videos, Resources
+  const [editingAlbumItem, setEditingAlbumItem] = useState(null);
+  const [editingVideoItem, setEditingVideoItem] = useState(null);
+  const [editingResourceItem, setEditingResourceItem] = useState(null);
 
   // Password Reset Modal State for Admin
   const [resetPasswordUser, setResetPasswordUser] = useState(null);
@@ -667,6 +678,24 @@ export default function AdminPortal({
           <FilePlus size={15} /> 📄 Văn Bản ({documents.length})
         </button>
         <button 
+          onClick={() => setAdminTab('manageAlbums')} 
+          style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'manageAlbums' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'manageAlbums' ? '700' : '500', color: adminTab === 'manageAlbums' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+        >
+          📷 Albums Ảnh ({albums.length})
+        </button>
+        <button 
+          onClick={() => setAdminTab('manageVideos')} 
+          style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'manageVideos' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'manageVideos' ? '700' : '500', color: adminTab === 'manageVideos' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+        >
+          🎬 Videos ({videos.length})
+        </button>
+        <button 
+          onClick={() => setAdminTab('manageResources')} 
+          style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'manageResources' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'manageResources' ? '700' : '500', color: adminTab === 'manageResources' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+        >
+          📁 Tài Nguyên ({resources.length})
+        </button>
+        <button 
           onClick={() => { setEditingArticle(null); setAdminTab('news'); }} 
           style={{ padding: '8px 14px', border: 'none', borderBottom: adminTab === 'news' ? '3px solid #0056a6' : 'none', background: 'transparent', fontWeight: adminTab === 'news' ? '700' : '500', color: adminTab === 'news' ? '#0056a6' : '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
         >
@@ -1066,6 +1095,127 @@ export default function AdminPortal({
         </div>
       )}
 
+      {/* Tab Manage Albums: Quản lý & Sửa / Xóa Albums Ảnh */}
+      {adminTab === 'manageAlbums' && (
+        <div>
+          <h3 style={{ fontSize: '16px', color: '#003a73', marginBottom: '15px', fontWeight: '700' }}>
+            📷 DANH SÁCH ALBUMS ẢNH ({albums.length} ALBUM)
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {albums.map(album => (
+              <div key={album.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#f8fafc' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <img src={album.cover || "https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&q=80"} alt="" style={{ width: '65px', height: '45px', objectFit: 'cover', borderRadius: '4px' }} />
+                  <div>
+                    <h4 style={{ fontSize: '14px', color: '#003a73', margin: 0, fontWeight: '700' }}>{album.title}</h4>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>📅 {album.date} | 📷 {album.photosCount || 1} ảnh</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    onClick={() => setEditingAlbumItem(album)}
+                    style={{ background: '#0284c7', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Edit size={14} /> Sửa Album
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm(`Thầy/Cô có chắc muốn xóa Album "${album.title}"?`)) {
+                        onDeleteAlbum && onDeleteAlbum(album.id);
+                        setMessage(`✅ Đã xóa Album "${album.title}" thành công!`);
+                      }
+                    }}
+                    style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Trash2 size={14} /> Xóa
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tab Manage Videos: Quản lý & Sửa / Xóa Videos */}
+      {adminTab === 'manageVideos' && (
+        <div>
+          <h3 style={{ fontSize: '16px', color: '#003a73', marginBottom: '15px', fontWeight: '700' }}>
+            🎬 DANH SÁCH VIDEO THƯ VIỆN ({videos.length} VIDEO)
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {videos.map(video => (
+              <div key={video.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#f8fafc' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <img src={video.thumbnailUrl || (video.youtubeId ? `https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg` : "https://images.unsplash.com/photo-1577896851231-70ef18881754?w=200&q=80")} alt="" style={{ width: '65px', height: '45px', objectFit: 'cover', borderRadius: '4px' }} />
+                  <div>
+                    <h4 style={{ fontSize: '14px', color: '#003a73', margin: 0, fontWeight: '700' }}>{video.title}</h4>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>👁️ {video.views || 100} lượt xem | YouTube ID: {video.youtubeId || 'N/A'}</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    onClick={() => setEditingVideoItem(video)}
+                    style={{ background: '#0284c7', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Edit size={14} /> Sửa Video
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm(`Thầy/Cô có chắc muốn xóa Video "${video.title}"?`)) {
+                        onDeleteVideo && onDeleteVideo(video.id);
+                        setMessage(`✅ Đã xóa Video "${video.title}" thành công!`);
+                      }
+                    }}
+                    style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Trash2 size={14} /> Xóa
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tab Manage Resources: Quản lý & Sửa / Xóa Tài Nguyên Đề Thi */}
+      {adminTab === 'manageResources' && (
+        <div>
+          <h3 style={{ fontSize: '16px', color: '#003a73', marginBottom: '15px', fontWeight: '700' }}>
+            📁 DANH SÁCH TÀI NGUYÊN & ĐỀ THI ({resources.length} TÀI LIỆU)
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {resources.map(res => (
+              <div key={res.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#f8fafc' }}>
+                <div>
+                  <span style={{ fontSize: '11px', background: '#d97706', color: 'white', padding: '2px 6px', borderRadius: '3px', fontWeight: '700', marginRight: '6px' }}>{res.subject || 'Toán'}</span>
+                  <h4 style={{ fontSize: '14px', color: '#003a73', margin: '4px 0 0 0', fontWeight: '700' }}>{res.title}</h4>
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>📂 {res.type} | ✍️ {res.author} | ⬇️ {res.downloads || 0} lượt tải</span>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    onClick={() => setEditingResourceItem(res)}
+                    style={{ background: '#0284c7', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Edit size={14} /> Sửa tài liệu
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm(`Thầy/Cô có chắc muốn xóa tài liệu "${res.title}"?`)) {
+                        onDeleteResource && onDeleteResource(res.id);
+                        setMessage(`✅ Đã xóa tài liệu "${res.title}" thành công!`);
+                      }
+                    }}
+                    style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Trash2 size={14} /> Xóa
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Tab Form Đăng & Sửa Tin Bài */}
       {adminTab === 'news' && (
         <form onSubmit={handleCreateNews} style={{ display: 'grid', gap: '15px', maxWidth: '750px' }}>
@@ -1302,6 +1452,127 @@ export default function AdminPortal({
                   <button type="submit" style={{ padding: '8px 14px', background: '#0056a6', color: 'white', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer' }}>
                     💾 LƯU MẬT KHẨU MỚI
                   </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SỬA ALBUM ẢNH */}
+      {editingAlbumItem && (
+        <div className="modal-overlay" onClick={() => setEditingAlbumItem(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header" style={{ background: '#0056a6' }}>
+              <span style={{ fontSize: '14px', fontWeight: '700' }}>📷 CHỈNH SỬA ALBUM ẢNH</span>
+              <button className="close-btn" onClick={() => setEditingAlbumItem(null)}>×</button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                onUpdateAlbum && onUpdateAlbum(editingAlbumItem);
+                setEditingAlbumItem(null);
+                setMessage(`✅ Đã cập nhật Album "${editingAlbumItem.title}" thành công!`);
+              }} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Tiêu đề Album:</label>
+                  <input type="text" value={editingAlbumItem.title} onChange={(e) => setEditingAlbumItem({ ...editingAlbumItem, title: e.target.value })} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Ngày tạo:</label>
+                  <input type="text" value={editingAlbumItem.date} onChange={(e) => setEditingAlbumItem({ ...editingAlbumItem, date: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Đường dẫn ảnh bìa (Cover URL):</label>
+                  <input type="text" value={editingAlbumItem.cover} onChange={(e) => setEditingAlbumItem({ ...editingAlbumItem, cover: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Mô tả Album:</label>
+                  <textarea value={editingAlbumItem.description} onChange={(e) => setEditingAlbumItem({ ...editingAlbumItem, description: e.target.value })} rows={3} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                  <button type="button" onClick={() => setEditingAlbumItem(null)} style={{ padding: '8px 14px', background: '#e2e8f0', border: 'none', borderRadius: '4px', fontWeight: '600', cursor: 'pointer' }}>Hủy</button>
+                  <button type="submit" style={{ padding: '8px 14px', background: '#0056a6', color: 'white', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer' }}>💾 LƯU ALBUM</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SỬA VIDEO */}
+      {editingVideoItem && (
+        <div className="modal-overlay" onClick={() => setEditingVideoItem(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header" style={{ background: '#0056a6' }}>
+              <span style={{ fontSize: '14px', fontWeight: '700' }}>🎬 CHỈNH SỬA VIDEO THƯ VIỆN</span>
+              <button className="close-btn" onClick={() => setEditingVideoItem(null)}>×</button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                onUpdateVideo && onUpdateVideo(editingVideoItem);
+                setEditingVideoItem(null);
+                setMessage(`✅ Đã cập nhật Video "${editingVideoItem.title}" thành công!`);
+              }} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Tiêu đề Video:</label>
+                  <input type="text" value={editingVideoItem.title} onChange={(e) => setEditingVideoItem({ ...editingVideoItem, title: e.target.value })} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Mã YouTube ID (nếu phát YouTube):</label>
+                  <input type="text" value={editingVideoItem.youtubeId || ''} onChange={(e) => setEditingVideoItem({ ...editingVideoItem, youtubeId: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="VD: dQw4w9WgXcQ" />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Đường dẫn Thumbnail / Ảnh bìa Video:</label>
+                  <input type="text" value={editingVideoItem.thumbnailUrl || ''} onChange={(e) => setEditingVideoItem({ ...editingVideoItem, thumbnailUrl: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                  <button type="button" onClick={() => setEditingVideoItem(null)} style={{ padding: '8px 14px', background: '#e2e8f0', border: 'none', borderRadius: '4px', fontWeight: '600', cursor: 'pointer' }}>Hủy</button>
+                  <button type="submit" style={{ padding: '8px 14px', background: '#0056a6', color: 'white', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer' }}>💾 LƯU VIDEO</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SỬA TÀI NGUYÊN ĐỀ THI */}
+      {editingResourceItem && (
+        <div className="modal-overlay" onClick={() => setEditingResourceItem(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header" style={{ background: '#0056a6' }}>
+              <span style={{ fontSize: '14px', fontWeight: '700' }}>📁 CHỈNH SỬA TÀI NGUYÊN & ĐỀ THI</span>
+              <button className="close-btn" onClick={() => setEditingResourceItem(null)}>×</button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                onUpdateResource && onUpdateResource(editingResourceItem);
+                setEditingResourceItem(null);
+                setMessage(`✅ Đã cập nhật tài nguyên "${editingResourceItem.title}" thành công!`);
+              }} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Tiêu đề tài liệu / Đề thi:</label>
+                  <input type="text" value={editingResourceItem.title} onChange={(e) => setEditingResourceItem({ ...editingResourceItem, title: e.target.value })} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Môn học:</label>
+                    <input type="text" value={editingResourceItem.subject} onChange={(e) => setEditingResourceItem({ ...editingResourceItem, subject: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Loại tài liệu:</label>
+                    <input type="text" value={editingResourceItem.type} onChange={(e) => setEditingResourceItem({ ...editingResourceItem, type: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Tác giả / Tổ chuyên môn:</label>
+                  <input type="text" value={editingResourceItem.author} onChange={(e) => setEditingResourceItem({ ...editingResourceItem, author: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                  <button type="button" onClick={() => setEditingResourceItem(null)} style={{ padding: '8px 14px', background: '#e2e8f0', border: 'none', borderRadius: '4px', fontWeight: '600', cursor: 'pointer' }}>Hủy</button>
+                  <button type="submit" style={{ padding: '8px 14px', background: '#0056a6', color: 'white', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer' }}>💾 LƯU TÀI LIỆU</button>
                 </div>
               </form>
             </div>

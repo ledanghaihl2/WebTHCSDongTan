@@ -474,6 +474,95 @@ export default function App() {
     }
   };
 
+  const handleUpdateAlbum = async (updatedAlbum) => {
+    setAlbums(prev => prev.map(a => a.id === updatedAlbum.id ? updatedAlbum : a));
+    if (supabase) {
+      try {
+        await supabase.from('albums').update({
+          title: updatedAlbum.title,
+          date: updatedAlbum.date,
+          photos_count: updatedAlbum.photosCount,
+          cover: updatedAlbum.cover,
+          description: updatedAlbum.description,
+          file_url: updatedAlbum.fileUrl,
+          external_link: updatedAlbum.externalLink
+        }).eq('id', updatedAlbum.id);
+      } catch (err) {
+        console.error('Lỗi sửa album Supabase:', err);
+      }
+    }
+  };
+
+  const handleDeleteAlbum = async (albumId) => {
+    setAlbums(prev => prev.filter(a => a.id !== albumId));
+    if (supabase) {
+      try {
+        await supabase.from('albums').delete().eq('id', albumId);
+      } catch (err) {
+        console.error('Lỗi xóa album Supabase:', err);
+      }
+    }
+  };
+
+  const handleUpdateVideo = async (updatedVideo) => {
+    setVideos(prev => prev.map(v => v.id === updatedVideo.id ? updatedVideo : v));
+    if (supabase) {
+      try {
+        await supabase.from('videos').update({
+          title: updatedVideo.title,
+          youtube_id: updatedVideo.youtubeId,
+          video_url: updatedVideo.videoUrl,
+          thumbnail_url: updatedVideo.thumbnailUrl,
+          external_link: updatedVideo.externalLink
+        }).eq('id', updatedVideo.id);
+      } catch (err) {
+        console.error('Lỗi sửa video Supabase:', err);
+      }
+    }
+  };
+
+  const handleDeleteVideo = async (videoId) => {
+    setVideos(prev => prev.filter(v => v.id !== videoId));
+    if (supabase) {
+      try {
+        await supabase.from('videos').delete().eq('id', videoId);
+      } catch (err) {
+        console.error('Lỗi xóa video Supabase:', err);
+      }
+    }
+  };
+
+  const handleUpdateResource = async (updatedRes) => {
+    setResources(prev => prev.map(r => r.id === updatedRes.id ? updatedRes : r));
+    if (supabase) {
+      try {
+        await supabase.from('resources').update({
+          title: updatedRes.title,
+          type: updatedRes.type,
+          subject: updatedRes.subject,
+          author: updatedRes.author,
+          date: updatedRes.date,
+          file_url: updatedRes.fileUrl,
+          file_name: updatedRes.fileName,
+          external_link: updatedRes.externalLink
+        }).eq('id', updatedRes.id);
+      } catch (err) {
+        console.error('Lỗi sửa tài nguyên Supabase:', err);
+      }
+    }
+  };
+
+  const handleDeleteResource = async (resId) => {
+    setResources(prev => prev.filter(r => r.id !== resId));
+    if (supabase) {
+      try {
+        await supabase.from('resources').delete().eq('id', resId);
+      } catch (err) {
+        console.error('Lỗi xóa tài nguyên Supabase:', err);
+      }
+    }
+  };
+
   const handleRegisterSuccess = (newPendingUser) => {
     setPendingUsers(prev => [newPendingUser, ...prev]);
     fetchCloudData();
@@ -622,6 +711,8 @@ export default function App() {
             newsList={newsList}
             documents={documents}
             resources={resources}
+            albums={albums}
+            videos={videos}
             pendingUsers={pendingUsers}
             onApproveUser={handleApproveUser}
             onRejectUser={handleRejectUser}
@@ -629,17 +720,41 @@ export default function App() {
             onDeleteNews={handleDeleteNews}
             onUpdateDocument={handleUpdateDocument}
             onDeleteDocument={handleDeleteDocument}
+            onUpdateAlbum={handleUpdateAlbum}
+            onDeleteAlbum={handleDeleteAlbum}
+            onUpdateVideo={handleUpdateVideo}
+            onDeleteVideo={handleDeleteVideo}
+            onUpdateResource={handleUpdateResource}
+            onDeleteResource={handleDeleteResource}
             onRefreshData={fetchCloudData}
           />
         </div>
       ) : activeTab === 'intro' ? (
         <IntroView siteConfig={siteConfig} />
       ) : activeTab === 'albums' ? (
-        <AlbumsView albums={albums} />
+        <AlbumsView 
+          albums={albums} 
+          user={user} 
+          onUpdateAlbum={handleUpdateAlbum} 
+          onDeleteAlbum={handleDeleteAlbum} 
+        />
       ) : activeTab === 'videos' ? (
-        <VideosView videos={videos} onOpenUpload={handleOpenUpload} />
+        <VideosView 
+          videos={videos} 
+          user={user} 
+          onOpenUpload={handleOpenUpload} 
+          onUpdateVideo={handleUpdateVideo} 
+          onDeleteVideo={handleDeleteVideo} 
+        />
       ) : activeTab === 'resources' ? (
-        <ResourcesView resources={resources} onOpenUpload={handleOpenUpload} onOpenBulkUpload={handleOpenBulkUpload} />
+        <ResourcesView 
+          resources={resources} 
+          user={user} 
+          onOpenUpload={handleOpenUpload} 
+          onOpenBulkUpload={handleOpenBulkUpload} 
+          onUpdateResource={handleUpdateResource} 
+          onDeleteResource={handleDeleteResource} 
+        />
       ) : activeTab === 'schedule' ? (
         <ScheduleView schedule={schedules} />
       ) : activeTab === 'contact' ? (
