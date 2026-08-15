@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, UploadCloud, Layers, CheckCircle, FileText, BookOpen, Image, AlertCircle, RefreshCw } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase, uploadFileToSupabase } from '../lib/supabaseClient';
 
 export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
   const [bulkType, setBulkType] = useState('resources'); // 'resources', 'docs', 'albums'
@@ -65,12 +65,19 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
       setFileList(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'uploading' } : f));
 
       try {
-        const dataUrl = await new Promise((resolve, reject) => {
+        let uploadedUrl = '';
+        try {
+          uploadedUrl = await uploadFileToSupabase(item.file, bulkType || 'uploads');
+        } catch (e) {}
+
+        const dataUrl = (uploadedUrl && !uploadedUrl.startsWith('data:')) ? uploadedUrl : await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = (e) => resolve(e.target.result);
           reader.onerror = (e) => reject(e);
           reader.readAsDataURL(item.file);
         });
+
+        const safeDbUrl = (dataUrl && dataUrl.length > 200000) ? item.name : dataUrl;
 
         if (bulkType === 'resources') {
           batchItemsToInsert.push({
@@ -80,7 +87,7 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
             author: defaultAuthor,
             date: new Date().toLocaleDateString('vi-VN'),
             downloads: 0,
-            file_url: dataUrl,
+            file_url: safeDbUrl,
             file_name: item.name,
             external_link: ''
           });
@@ -91,7 +98,7 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
             category: defaultDocCategory,
             issue_date: new Date().toLocaleDateString('vi-VN'),
             signer: defaultSigner,
-            file_url: dataUrl,
+            file_url: safeDbUrl,
             file_name: item.name,
             external_link: ''
           });
@@ -100,9 +107,9 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
             title: item.title || item.name,
             date: new Date().toLocaleDateString('vi-VN'),
             photos_count: 1,
-            cover: dataUrl,
+            cover: safeDbUrl,
             description: item.title,
-            file_url: dataUrl,
+            file_url: safeDbUrl,
             external_link: ''
           });
         }

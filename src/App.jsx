@@ -336,7 +336,19 @@ export default function App() {
           phone: cfgData.phone || INITIAL_SITE_CONFIG.phone,
           email: cfgData.email || INITIAL_SITE_CONFIG.email,
           logoUrl: cfgData.logo_url || INITIAL_SITE_CONFIG.logoUrl,
-          bannerBg: cfgData.banner_bg || INITIAL_SITE_CONFIG.bannerBg
+          bannerBg: cfgData.banner_bg || INITIAL_SITE_CONFIG.bannerBg,
+
+          principalName: cfgData.principal_name || INITIAL_SITE_CONFIG.principalName,
+          principalTitle: cfgData.principal_title || INITIAL_SITE_CONFIG.principalTitle,
+          principalAvatar: cfgData.principal_avatar || INITIAL_SITE_CONFIG.principalAvatar,
+
+          vicePrincipal1Name: cfgData.vice_principal1_name || INITIAL_SITE_CONFIG.vicePrincipal1Name,
+          vicePrincipal1Title: cfgData.vice_principal1_title || INITIAL_SITE_CONFIG.vicePrincipal1Title,
+          vicePrincipal1Avatar: cfgData.vice_principal1_avatar || INITIAL_SITE_CONFIG.vicePrincipal1Avatar,
+
+          vicePrincipal2Name: cfgData.vice_principal2_name || INITIAL_SITE_CONFIG.vicePrincipal2Name,
+          vicePrincipal2Title: cfgData.vice_principal2_title || INITIAL_SITE_CONFIG.vicePrincipal2Title,
+          vicePrincipal2Avatar: cfgData.vice_principal2_avatar || INITIAL_SITE_CONFIG.vicePrincipal2Avatar
         });
       }
 
@@ -368,6 +380,8 @@ export default function App() {
     setSiteConfig(newConfig);
     if (supabase) {
       try {
+        const safeAvatar = (url, fallback) => (url && url.length > 200000) ? fallback : (url || fallback);
+
         await supabase.from('site_config').upsert({
           id: 1,
           school_name: newConfig.schoolName,
@@ -376,11 +390,26 @@ export default function App() {
           address: newConfig.address,
           phone: newConfig.phone,
           email: newConfig.email,
-          logo_url: newConfig.logoUrl,
-          banner_bg: newConfig.bannerBg,
+          logo_url: safeAvatar(newConfig.logoUrl, '/images/school-logo.jpg'),
+          banner_bg: safeAvatar(newConfig.bannerBg, '/images/school-banner.png'),
+
+          principal_name: newConfig.principalName,
+          principal_title: newConfig.principalTitle,
+          principal_avatar: safeAvatar(newConfig.principalAvatar, 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&q=80'),
+
+          vice_principal1_name: newConfig.vicePrincipal1Name,
+          vice_principal1_title: newConfig.vicePrincipal1Title,
+          vice_principal1_avatar: safeAvatar(newConfig.vicePrincipal1Avatar, 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&q=80'),
+
+          vice_principal2_name: newConfig.vicePrincipal2Name,
+          vice_principal2_title: newConfig.vicePrincipal2Title,
+          vice_principal2_avatar: safeAvatar(newConfig.vicePrincipal2Avatar, 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&q=80'),
+
           updated_at: new Date().toISOString()
         });
-      } catch (err) {}
+      } catch (err) {
+        console.error('Lỗi lưu site_config Supabase:', err);
+      }
     }
   };
 
