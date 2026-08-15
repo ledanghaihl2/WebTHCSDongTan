@@ -83,21 +83,20 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
     const newItemId = Date.now();
     let newItem = null;
 
-    // Helper rút gọn dữ liệu lớn để tránh lỗi 413 Payload Too Large khi gửi sang Supabase PostgREST DB
+    // Helper giữ nguyên 100% đường link ảnh gốc do người dùng tải lên (Data URL / HTTP URL)
     const getSafeDbImageUrl = (url, fallback = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80') => {
-      if (!url || url === '#' || url === 'file_attached') return fallback;
-      if (url.startsWith('http') || url.startsWith('/') || (url.startsWith('data:image') && url.length <= 200000)) {
+      if (!url || url === '#' || url === 'file_attached') {
+        return (externalLink && externalLink.startsWith('http')) ? externalLink : fallback;
+      }
+      if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:image')) {
         return url;
       }
-      if (externalLink && (externalLink.startsWith('http') || externalLink.startsWith('/'))) {
-        return externalLink;
-      }
-      return fallback;
+      return (externalLink && externalLink.startsWith('http')) ? externalLink : fallback;
     };
 
     const getSafeDbFileUrl = (url) => {
       if (!url || url === '#') return externalLink || fileName || 'file_attached';
-      if (url.startsWith('http') || url.startsWith('/') || (url.startsWith('data:') && url.length <= 200000)) {
+      if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:')) {
         return url;
       }
       return externalLink || fileName || 'file_attached';

@@ -78,8 +78,8 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
         });
 
         const defaultAlbumCover = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80';
-        const safeDbImageUrl = (dataUrl && (dataUrl.startsWith('http') || dataUrl.startsWith('/') || (dataUrl.startsWith('data:image') && dataUrl.length <= 200000))) ? dataUrl : defaultAlbumCover;
-        const safeDbFileUrl = (dataUrl && dataUrl.length <= 200000) ? dataUrl : item.name;
+        const safeDbImageUrl = (dataUrl && (dataUrl.startsWith('http') || dataUrl.startsWith('/') || dataUrl.startsWith('data:image'))) ? dataUrl : defaultAlbumCover;
+        const safeDbFileUrl = (dataUrl && (dataUrl.startsWith('http') || dataUrl.startsWith('/') || dataUrl.startsWith('data:'))) ? dataUrl : item.name;
 
         if (bulkType === 'resources') {
           batchItemsToInsert.push({
