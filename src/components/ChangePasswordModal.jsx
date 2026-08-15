@@ -56,7 +56,12 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
       } catch (err) {}
     }
 
-    setMessage('✅ Đổi mật khẩu tài khoản thành công!');
+    // 3. Lưu mật khẩu mới vào LocalStorage để đảm bảo đăng nhập luôn ăn ngay lập tức
+    if (user?.username) {
+      localStorage.setItem('user_password_' + user.username, newPassword);
+    }
+
+    setMessage('✅ Đổi mật khẩu tài khoản thành công! Lần sau đăng nhập bằng mật khẩu mới này.');
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
