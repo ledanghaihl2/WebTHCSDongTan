@@ -175,6 +175,16 @@ ALTER TABLE public.albums ADD COLUMN IF NOT EXISTS external_link TEXT DEFAULT ''
 ALTER TABLE public.resources ADD COLUMN IF NOT EXISTS file_name TEXT DEFAULT '';
 ALTER TABLE public.resources ADD COLUMN IF NOT EXISTS external_link TEXT DEFAULT '';
 
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS principal_name TEXT DEFAULT 'Thầy Hiệu Trưởng - THCS Đồng Tân';
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS principal_title TEXT DEFAULT 'Hiệu Trưởng Nhà Trường';
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS principal_avatar TEXT DEFAULT 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&q=80';
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS vice_principal1_name TEXT DEFAULT 'Cô Phó Hiệu Trưởng - THCS Đồng Tân';
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS vice_principal1_title TEXT DEFAULT 'Phó Hiệu Trưởng Chuyên Môn';
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS vice_principal1_avatar TEXT DEFAULT 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&q=80';
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS vice_principal2_name TEXT DEFAULT 'Thầy Phó Hiệu Trưởng - CSVC';
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS vice_principal2_title TEXT DEFAULT 'Phó Hiệu Trưởng Cơ Sở Vật Chất';
+ALTER TABLE public.site_config ADD COLUMN IF NOT EXISTS vice_principal2_avatar TEXT DEFAULT 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&q=80';
+
 -- Cập nhật mặc định cho status nếu giá trị đang là NULL hoặc APPROVED
 UPDATE public.users SET status = 'ACTIVE' WHERE status IS NULL OR status = 'APPROVED';
 UPDATE public.users SET role = 'BGH' WHERE role = 'ADMIN';
