@@ -72,62 +72,100 @@ export default function Navbar({ user, activeTab, setActiveTab, onOpenAdmin, onO
 
       {/* Logged in User Menu OR Admin Portal Button */}
       {user ? (
-        <div style={{ position: 'relative', display: 'inline-block' }}>
-          <a 
+        <div style={{ position: 'relative', display: 'inline-block', marginLeft: 'auto' }}>
+          <button 
+            type="button"
             className="nav-item admin-btn" 
-            style={{ background: '#0056a6', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ 
+              background: 'linear-gradient(135deg, #0284c7 0%, #003a73 100%)', 
+              color: '#ffffff',
+              border: '2px solid #38bdf8',
+              borderRadius: '6px',
+              padding: '6px 14px',
+              margin: '2px 4px',
+              fontWeight: '800', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              boxShadow: '0 4px 12px rgba(2, 132, 199, 0.4)'
+            }}
             onClick={() => setShowUserDropdown(!showUserDropdown)}
-            title="Bấm vào tên để mở menu tài khoản và Góc Thành Viên"
+            title="Bấm để mở Menu chức năng tài khoản (Đổi MK, Góc Thành Viên, Đăng Xuất)"
           >
-            <UserCheck size={16} />
-            <span>👤 {user.fullName || user.username}</span>
-            <ChevronDown size={14} />
-          </a>
+            <UserCheck size={18} color="#fbbf24" />
+            <span style={{ fontSize: '13.5px' }}>👤 {user.fullName || user.username}</span>
+            <span style={{ background: '#f59e0b', color: '#000', fontSize: '10.5px', padding: '1px 6px', borderRadius: '4px', fontWeight: '900' }}>
+              {getRoleBadge(user.role)}
+            </span>
+            <ChevronDown size={16} color="#ffffff" style={{ transform: showUserDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
+          </button>
 
           {showUserDropdown && (
             <div style={{
               position: 'absolute',
               right: 0,
-              top: '100%',
-              background: 'white',
-              boxShadow: '0 6px 20px rgba(0,0,0,0.2)',
-              borderRadius: '8px',
-              padding: '6px 0',
-              zIndex: 1000,
-              minWidth: '220px',
-              border: '1px solid #cbd5e1',
-              marginTop: '4px'
+              top: 'calc(100% + 6px)',
+              background: '#ffffff',
+              boxShadow: '0 12px 35px rgba(0,0,0,0.35)',
+              borderRadius: '12px',
+              padding: '8px 0',
+              zIndex: 99999,
+              minWidth: '260px',
+              border: '2px solid #0284c7',
+              animation: 'fadeIn 0.15s ease'
             }}>
-              <div style={{ padding: '8px 14px', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '12px', color: '#64748b' }}>
-                Đang đăng nhập: <strong style={{ color: '#003a73', display: 'block', fontSize: '13px' }}>{user.fullName || user.username}</strong>
-                <span style={{ color: '#0284c7', fontSize: '11.5px', fontWeight: '700' }}>[{getRoleBadge(user.role)}]</span>
+              {/* Dropdown User Info Header */}
+              <div style={{ padding: '10px 16px', borderBottom: '1.5px solid #e2e8f0', background: 'linear-gradient(to right, #f0f9ff, #e0f2fe)' }}>
+                <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#64748b', fontWeight: '700', display: 'block' }}>Tài Khoản Đang Đăng Nhập:</span>
+                <strong style={{ color: '#003a73', display: 'block', fontSize: '14px', marginTop: '2px', fontWeight: '800' }}>
+                  👤 {user.fullName || user.username}
+                </strong>
+                <span style={{ display: 'inline-block', background: '#0284c7', color: '#ffffff', fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '4px', marginTop: '4px' }}>
+                  {getRoleBadge(user.role)}
+                </span>
               </div>
               
+              {/* Action 1: Member Zone */}
               <button
+                type="button"
                 onClick={() => { setShowUserDropdown(false); if (onOpenMemberZone) onOpenMemberZone(); }}
-                style={{ width: '100%', padding: '10px 14px', textAlign: 'left', background: '#f0f9ff', border: 'none', borderBottom: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '13px', fontWeight: '800', color: '#0284c7', display: 'flex', alignItems: 'center', gap: '8px' }}
+                style={{ width: '100%', padding: '12px 16px', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '13.5px', fontWeight: '800', color: '#0284c7', display: 'flex', alignItems: 'center', gap: '10px' }}
               >
-                <LayoutDashboard size={16} color="#0284c7" /> 📊 Góc Thành Viên ({getRoleBadge(user.role)})
+                <LayoutDashboard size={18} color="#0284c7" />
+                <span>📊 Góc Thành Viên ({getRoleBadge(user.role)})</span>
               </button>
 
+              {/* Action 2: Change Password */}
               <button
+                type="button"
                 onClick={() => { setShowUserDropdown(false); if (onOpenChangePassword) onOpenChangePassword(); }}
-                style={{ width: '100%', padding: '10px 14px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', color: '#7c3aed', display: 'flex', alignItems: 'center', gap: '8px' }}
+                style={{ width: '100%', padding: '12px 16px', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '13.5px', fontWeight: '700', color: '#7c3aed', display: 'flex', alignItems: 'center', gap: '10px' }}
               >
-                <KeyRound size={16} /> 🔑 Đổi Mật Khẩu
+                <KeyRound size={18} color="#7c3aed" />
+                <span>🔑 Đổi Mật Khẩu Tài Khoản</span>
               </button>
+
+              {/* Action 3: Admin Portal */}
               <button
+                type="button"
                 onClick={() => { setShowUserDropdown(false); if (onOpenAdmin) onOpenAdmin(); }}
-                style={{ width: '100%', padding: '10px 14px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: '#0056a6', display: 'flex', alignItems: 'center', gap: '8px' }}
+                style={{ width: '100%', padding: '12px 16px', textAlign: 'left', background: 'none', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', fontSize: '13.5px', fontWeight: '700', color: '#0056a6', display: 'flex', alignItems: 'center', gap: '10px' }}
               >
-                <ShieldAlert size={16} /> 🛡️ Cổng Quản Trị
+                <ShieldAlert size={18} color="#0056a6" />
+                <span>🛡️ Cổng Quản Trị Hệ Thống</span>
               </button>
+
               <div style={{ borderTop: '1px solid #e2e8f0', margin: '4px 0' }}></div>
+
+              {/* Action 4: Logout */}
               <button
+                type="button"
                 onClick={() => { setShowUserDropdown(false); if (onLogout) onLogout(); }}
-                style={{ width: '100%', padding: '10px 14px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '8px' }}
+                style={{ width: '100%', padding: '12px 16px', textAlign: 'left', background: '#fef2f2', border: 'none', cursor: 'pointer', fontSize: '13.5px', fontWeight: '800', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '10px' }}
               >
-                <LogOut size={16} /> 🚪 Đăng Xuất
+                <LogOut size={18} color="#dc2626" />
+                <span>🚪 Đăng Xuất (Thoát Hệ Thống)</span>
               </button>
             </div>
           )}
