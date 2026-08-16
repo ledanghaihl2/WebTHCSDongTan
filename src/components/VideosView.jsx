@@ -1,3 +1,6 @@
+import React, { useState, useEffect } from 'react';
+import { Video, Play, Eye, ExternalLink, Upload, AlertTriangle, Trash2, Plus, Edit } from 'lucide-react';
+
 // Robust YouTube ID Extractor (Hỗ trợ tất cả dạng link: watch?v=, youtu.be/, shorts/, embed/)
 function extractYouTubeId(urlOrId) {
   if (!urlOrId) return '';
