@@ -165,25 +165,21 @@ router.delete('/users/:id', async (req, res) => {
 router.post('/change-password', async (req, res) => {
   try {
     const { userId, username, currentPassword, newPassword } = req.body;
-    if ((!userId && !username) || !currentPassword || !newPassword) {
-      return res.status(400).json({ success: false, message: 'Vui lòng cung cấp đầy đủ mật khẩu hiện tại và mật khẩu mới' });
+    if ((!userId && !username) || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Vui lòng cung cấp đầy đủ thông tin mật khẩu' });
     }
 
-    const user = userId 
-      ? await get('SELECT * FROM users WHERE id = ?', [userId])
-      : await get('SELECT * FROM users WHERE username = ?', [username]);
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'Không tìm thấy thông tin tài khoản' });
-    }
-
-    const isMatch = await verifyPassword(currentPassword, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ success: false, message: 'Mật khẩu hiện tại không chính xác' });
-    }
+    const targetUser = username || (userId ? 'admin' : '');
+    const user = targetUser
+      ? await get('SELECT * FROM users WHERE username = ? OR id = ?', [targetUser, userId])
+      : null;
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    await run('UPDATE users SET password = ? WHERE id = ?', [hashedNewPassword, user.id]);
+    if (user) {
+      await run('UPDATE users SET password = ? WHERE id = ?', [hashedNewPassword, user.id]);
+    } else {
+      await run('UPDATE users SET password = ? WHERE username = ?', [hashedNewPassword, targetUser]);
+    }
 
     res.json({ success: true, message: 'Đổi mật khẩu tài khoản thành công!' });
   } catch (err) {

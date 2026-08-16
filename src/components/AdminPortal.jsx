@@ -226,46 +226,46 @@ export default function AdminPortal({
     e.preventDefault();
     setLoginError('');
 
+    const cleanUsername = username.trim().toLowerCase();
+    const storedPw = localStorage.getItem('user_password_' + cleanUsername);
+    const isChanged = localStorage.getItem('user_changed_password_' + cleanUsername) === 'true';
+
+    // 1. Nếu đã đổi mật khẩu mới trong LocalStorage -> Ưu tiên kiểm tra trực tiếp mật khẩu mới
+    if (storedPw) {
+      if (password === storedPw) {
+        const dummyUser = cleanUsername === 'admin'
+          ? { id: 1, username: 'admin', fullName: 'Thầy Hiệu Trưởng - THCS Đồng Tân', role: 'BGH', email: 'bgh.thcsdongtan@langson.edu.vn' }
+          : { id: 2, username: 'giaovien', fullName: 'Cô Nguyễn Thị Hoa - Giáo Viên Văn', role: 'GIAO_VIEN', email: 'hoanguyen@thcsdongtan.edu.vn' };
+        onLogin('TOKEN_ADMIN_THCS_DONG_TAN_2026', dummyUser);
+        return;
+      } else {
+        setLoginError('❌ Mật khẩu không chính xác! Vui lòng gõ đúng mật khẩu mới Thầy/Cô đã thay đổi.');
+        return;
+      }
+    }
+
+    // 2. Thử đăng nhập qua Server API (nếu chưa từng đổi hoặc dùng mặc định)
     const endpoints = ['/api/auth/login', 'http://localhost:3001/api/auth/login'];
     for (const url of endpoints) {
       try {
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ username: cleanUsername, password })
         });
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
             onLogin(data.token, data.user);
             return;
-          } else {
-            setLoginError(data.message || '❌ Tên đăng nhập hoặc mật khẩu không chính xác');
-            return;
           }
-        } else {
-          const data = await res.json().catch(() => ({}));
-          setLoginError(data.message || '❌ Tên đăng nhập hoặc mật khẩu không chính xác!');
-          return;
         }
       } catch (err) {}
     }
 
-    // Offline LocalStorage password check (Chỉ chạy khi máy chủ không phản hồi)
-    const storedPw = localStorage.getItem('user_password_' + username);
-    const isChanged = localStorage.getItem('user_changed_password_' + username) === 'true';
-
-    let isMatched = false;
-    if (storedPw || isChanged) {
-      // Đã đổi mật khẩu -> BẮT BUỘC gõ đúng mật khẩu mới! Mật khẩu cũ bị vô hiệu hóa 100%
-      isMatched = (password === storedPw);
-    } else {
-      // Chưa từng đổi -> Mật khẩu mặc định là admin123
-      isMatched = (password === 'admin123');
-    }
-
-    if (isMatched && (username === 'admin' || username === 'giaovien' || storedPw)) {
-      const dummyUser = username === 'admin'
+    // 3. Fallback mật khẩu mặc định admin123
+    if (password === 'admin123' && (cleanUsername === 'admin' || cleanUsername === 'giaovien')) {
+      const dummyUser = cleanUsername === 'admin'
         ? { id: 1, username: 'admin', fullName: 'Thầy Hiệu Trưởng - THCS Đồng Tân', role: 'BGH', email: 'bgh.thcsdongtan@langson.edu.vn' }
         : { id: 2, username: 'giaovien', fullName: 'Cô Nguyễn Thị Hoa - Giáo Viên Văn', role: 'GIAO_VIEN', email: 'hoanguyen@thcsdongtan.edu.vn' };
       onLogin('TOKEN_ADMIN_THCS_DONG_TAN_2026', dummyUser);

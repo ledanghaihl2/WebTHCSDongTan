@@ -26,31 +26,46 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
     let authenticatedUser = null;
     let token = 'token-' + Date.now();
 
-    // 1. Thử đăng nhập qua Backend API SQLite (/api/auth/login)
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: cleanUsername, password: cleanPassword })
-      });
-      const data = await res.json();
-      if (res.ok && data.success && data.user) {
-        const uStatus = data.user.status ? data.user.status.toUpperCase() : 'ACTIVE';
-        if (uStatus === 'PENDING' || uStatus === 'PENDING_APPROVAL') {
-          setError('⏳ Tài khoản của bạn đã đăng ký nhưng ĐANG CHỜ BAN GIÁM HIỆU PHÊ DUYỆT. Vui lòng quay lại sau!');
-          setLoading(false);
-          return;
-        }
-        authenticatedUser = data.user;
-        token = data.token || token;
-      } else if (!res.ok) {
-        // Máy chủ Backend đang chạy và từ chối do gõ sai/dùng mật khẩu cũ -> DỪNG NGAY KHÔNG CHO FALLBACK MẬT KHẨU CŨ
-        setError(data.message || '❌ Tên đăng nhập hoặc mật khẩu không chính xác!');
+    const storedPw = localStorage.getItem('user_password_' + cleanUsername);
+    const isChanged = localStorage.getItem('user_changed_password_' + cleanUsername) === 'true';
+
+    // 1. Kiểm tra mật khẩu mới đã đổi lưu trong bộ nhớ LocalStorage trước tiên
+    if (storedPw) {
+      if (cleanPassword === storedPw) {
+        authenticatedUser = {
+          id: cleanUsername === 'admin' ? 1 : 2,
+          username: cleanUsername,
+          fullName: cleanUsername === 'admin' ? 'Thầy Hiệu Trưởng - THCS Đồng Tân' : 'Cô Nguyễn Thị Hoa - Giáo Viên',
+          role: cleanUsername === 'admin' ? 'BGH' : 'GIAO_VIEN',
+          status: 'ACTIVE'
+        };
+      } else {
+        setError('❌ Mật khẩu không chính xác! Vui lòng gõ đúng mật khẩu mới Thầy/Cô đã thay đổi.');
         setLoading(false);
         return;
       }
-    } catch (err) {
-      // Backend offline fallback (Chỉ chạy khi không kết nối được máy chủ)
+    }
+
+    // 2. Thử đăng nhập qua Backend API SQLite (/api/auth/login)
+    if (!authenticatedUser) {
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: cleanUsername, password: cleanPassword })
+        });
+        const data = await res.json();
+        if (res.ok && data.success && data.user) {
+          const uStatus = data.user.status ? data.user.status.toUpperCase() : 'ACTIVE';
+          if (uStatus === 'PENDING' || uStatus === 'PENDING_APPROVAL') {
+            setError('⏳ Tài khoản của bạn đã đăng ký nhưng ĐANG CHỜ BAN GIÁM HIỆU PHÊ DUYỆT. Vui lòng quay lại sau!');
+            setLoading(false);
+            return;
+          }
+          authenticatedUser = data.user;
+          token = data.token || token;
+        }
+      } catch (err) {}
     }
 
     // 2. Thử đăng nhập qua Supabase Cloud Postgres nếu backend offline
