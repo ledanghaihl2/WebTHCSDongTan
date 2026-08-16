@@ -14,7 +14,7 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
     setError('');
     setLoading(true);
 
-    const cleanUsername = username.trim();
+    const cleanUsername = username.trim().toLowerCase();
     const cleanPassword = password.trim();
 
     if (!cleanUsername || !cleanPassword) {
@@ -26,68 +26,21 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
     let authenticatedUser = null;
     let token = 'token-' + Date.now();
 
-    const storedPw = localStorage.getItem('user_password_' + cleanUsername);
-    const isChanged = localStorage.getItem('user_changed_password_' + cleanUsername) === 'true';
-
-    // 1. Kiểm tra mật khẩu mới đã đổi lưu trong bộ nhớ LocalStorage trước tiên
-    if (storedPw) {
-      if (cleanPassword === storedPw) {
-        authenticatedUser = {
-          id: cleanUsername === 'admin' ? 1 : 2,
-          username: cleanUsername,
-          fullName: cleanUsername === 'admin' ? 'Thầy Hiệu Trưởng - THCS Đồng Tân' : 'Cô Nguyễn Thị Hoa - Giáo Viên',
-          role: cleanUsername === 'admin' ? 'BGH' : 'GIAO_VIEN',
-          status: 'ACTIVE'
-        };
-      } else {
-        setError('❌ Mật khẩu không chính xác! Vui lòng gõ đúng mật khẩu mới Thầy/Cô đã thay đổi.');
-        setLoading(false);
-        return;
-      }
-    }
-
-    // 2. Thử đăng nhập qua Backend API SQLite (/api/auth/login)
-    if (!authenticatedUser) {
+    // 1. ƯU TIÊN KIỂM TRA MẬT KHẨU TRỰC TIẾP TỪ SUPABASE CLOUD (Đồng bộ toàn bộ thiết bị & trình duyệt)
+    if (supabase) {
       try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: cleanUsername, password: cleanPassword })
-        });
-        const data = await res.json();
-        if (res.ok && data.success && data.user) {
-          const uStatus = data.user.status ? data.user.status.toUpperCase() : 'ACTIVE';
-          if (uStatus === 'PENDING' || uStatus === 'PENDING_APPROVAL') {
-            setError('⏳ Tài khoản của bạn đã đăng ký nhưng ĐANG CHỜ BAN GIÁM HIỆU PHÊ DUYỆT. Vui lòng quay lại sau!');
-            setLoading(false);
-            return;
-          }
-          authenticatedUser = data.user;
-          token = data.token || token;
-        }
-      } catch (err) {}
-    }
-
-    // 2. Thử đăng nhập qua Supabase Cloud Postgres nếu backend offline
-    if (!authenticatedUser && supabase) {
-      try {
-        const { data: users, error: dbError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('username', cleanUsername);
-
+        const { data: users } = await supabase.from('users').select('*').eq('username', cleanUsername);
         if (users && users.length > 0) {
           const u = users[0];
           const storedPw = localStorage.getItem('user_password_' + cleanUsername);
-          const isChanged = localStorage.getItem('user_changed_password_' + cleanUsername) === 'true';
 
           let isPwValid = false;
-          if (storedPw || isChanged) {
-            // Đã đổi mật khẩu -> BẮT BUỘC gõ đúng mật khẩu mới (Mật khẩu cũ bị vô hiệu hóa 100%)
+          if (u.password) {
+            isPwValid = (cleanPassword === u.password || cleanPassword === storedPw);
+          } else if (storedPw) {
             isPwValid = (cleanPassword === storedPw);
           } else {
-            // Chưa đổi -> Kiểm tra mật khẩu trong Supabase hoặc mặc định admin123
-            isPwValid = (cleanPassword === u.password || cleanPassword === 'admin123');
+            isPwValid = (cleanPassword === 'admin123');
           }
 
           if (isPwValid) {
@@ -109,51 +62,35 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
               username: u.username,
               fullName: u.full_name || u.fullName || u.username,
               role: mappedRole,
-              email: u.email,
-              status: 'ACTIVE'
+              status: uStatus,
+              email: u.email || `${u.username}@thcsdongtan.edu.vn`
             };
-          } else {
-            setError('❌ Mật khẩu không chính xác! Nếu bạn đã đổi mật khẩu, vui lòng nhập mật khẩu mới.');
-            setLoading(false);
-            return;
+
+            // Đồng bộ mật khẩu mới nhất từ Cloud vào LocalStorage trình duyệt này
+            if (u.password) {
+              localStorage.setItem('user_password_' + cleanUsername, u.password);
+              localStorage.setItem('user_changed_password_' + cleanUsername, 'true');
+            }
           }
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error('Lỗi kiểm tra mật khẩu Supabase Cloud:', err);
+      }
     }
 
-    // 3. Fallback tài khoản mặc định và tài khoản trong LocalStorage (Khi Offline)
+    // 2. Kiểm tra bộ nhớ LocalStorage nếu offline hoặc chưa lấy được từ Supabase
     if (!authenticatedUser) {
-      try {
-        const pendingList = JSON.parse(localStorage.getItem('portal_pending_users') || '[]');
-        const pendingMatch = pendingList.find(u => u.username === cleanUsername);
-        if (pendingMatch) {
-          if (pendingMatch.status === 'PENDING') {
-            setError('⏳ Tài khoản của bạn vừa đăng ký thành công và ĐANG CHỜ BAN GIÁM HIỆU DUYỆT!');
-            setLoading(false);
-            return;
-          }
-        }
-      } catch (err) {}
-
       const storedPw = localStorage.getItem('user_password_' + cleanUsername);
       const isChanged = localStorage.getItem('user_changed_password_' + cleanUsername) === 'true';
-      
-      let isMatched = false;
+
+      let isMatch = false;
       if (storedPw || isChanged) {
-        // Đã đổi mật khẩu -> CHỈ chấp nhận mật khẩu mới! Mật khẩu cũ bị vô hiệu hóa hoàn toàn
-        isMatched = (cleanPassword === storedPw);
+        isMatch = (cleanPassword === storedPw);
       } else {
-        // Chưa đổi -> Chấp nhận mật khẩu mặc định admin123
-        isMatched = (cleanPassword === 'admin123');
+        isMatch = (cleanPassword === 'admin123');
       }
 
-      if (!isMatched) {
-        setError('❌ Mật khẩu không chính xác! Vui lòng kiểm tra lại hoặc nhập mật khẩu mới nếu đã thay đổi.');
-        setLoading(false);
-        return;
-      }
-
-      if (isMatched) {
+      if (isMatch) {
         if (cleanUsername === 'admin') {
           authenticatedUser = { id: 1, username: 'admin', fullName: 'Thầy Hiệu Trưởng - THCS Đồng Tân', role: 'BGH', email: 'bgh.thcsdongtan@langson.edu.vn', status: 'ACTIVE' };
         } else if (cleanUsername === 'giaovien') {
@@ -162,8 +99,6 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
           authenticatedUser = { id: 3, username: 'hocsinh01', fullName: 'Em Nguyễn Văn An - Học sinh 9A1', role: 'HOC_SINH', email: 'an.nguyen@thcsdongtan.edu.vn', status: 'ACTIVE' };
         } else if (cleanUsername === 'phuhuynh01') {
           authenticatedUser = { id: 4, username: 'phuhuynh01', fullName: 'Anh Trần Văn Bình (Phụ huynh em An 9A1)', role: 'PHU_HUYNH', email: 'binhtran@gmail.com', status: 'ACTIVE' };
-        } else if (cleanUsername === 'giaovien_toan') {
-          authenticatedUser = { id: 5, username: 'giaovien_toan', fullName: 'Cô Lê Thị Thu - Giáo Viên Toán', role: 'GIAO_VIEN', email: 'thule@thcsdongtan.edu.vn', status: 'ACTIVE' };
         } else if (storedPw) {
           authenticatedUser = { id: Date.now(), username: cleanUsername, fullName: cleanUsername, role: 'GIAO_VIEN', email: '', status: 'ACTIVE' };
         }
@@ -171,7 +106,7 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
     }
 
     if (!authenticatedUser) {
-      setError('❌ Mật khẩu hoặc Tên tài khoản không chính xác!');
+      setError('❌ Mật khẩu hoặc Tên tài khoản không chính xác! Vui lòng nhập mật khẩu mới nếu đã thay đổi.');
       setLoading(false);
       return;
     }

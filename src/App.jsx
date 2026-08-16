@@ -340,6 +340,14 @@ export default function App() {
       }
 
       if (usrData && usrData.length > 0) {
+        // Tự động đồng bộ mật khẩu mới nhất từ Supabase Cloud vào LocalStorage thiết bị
+        usrData.forEach(u => {
+          if (u.username && u.password) {
+            const uname = u.username.trim().toLowerCase();
+            localStorage.setItem('user_password_' + uname, u.password);
+            localStorage.setItem('user_changed_password_' + uname, 'true');
+          }
+        });
         const pendings = usrData.filter(u => u.status === 'PENDING').map(u => ({
           id: u.id,
           username: u.username,

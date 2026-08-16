@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, LogOut, PlusCircle, FilePlus, Users, CheckCircle, Trash2, Edit, Settings, AlertCircle, Save, Check, UserCheck, Bell, UserPlus, Eye, EyeOff, Lock } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 export default function AdminPortal({ 
   token, 
@@ -228,39 +229,57 @@ export default function AdminPortal({
 
     const cleanUsername = username.trim().toLowerCase();
     const storedPw = localStorage.getItem('user_password_' + cleanUsername);
-    const isChanged = localStorage.getItem('user_changed_password_' + cleanUsername) === 'true';
 
-    // 1. Nếu đã đổi mật khẩu mới trong LocalStorage -> Ưu tiên kiểm tra trực tiếp mật khẩu mới
-    if (storedPw) {
-      if (password === storedPw) {
-        const dummyUser = cleanUsername === 'admin'
-          ? { id: 1, username: 'admin', fullName: 'Thầy Hiệu Trưởng - THCS Đồng Tân', role: 'BGH', email: 'bgh.thcsdongtan@langson.edu.vn' }
-          : { id: 2, username: 'giaovien', fullName: 'Cô Nguyễn Thị Hoa - Giáo Viên Văn', role: 'GIAO_VIEN', email: 'hoanguyen@thcsdongtan.edu.vn' };
-        onLogin('TOKEN_ADMIN_THCS_DONG_TAN_2026', dummyUser);
-        return;
-      } else {
-        setLoginError('❌ Mật khẩu không chính xác! Vui lòng gõ đúng mật khẩu mới Thầy/Cô đã thay đổi.');
-        return;
-      }
-    }
-
-    // 2. Thử đăng nhập qua Server API (nếu chưa từng đổi hoặc dùng mặc định)
-    const endpoints = ['/api/auth/login', 'http://localhost:3001/api/auth/login'];
-    for (const url of endpoints) {
+    // 1. ƯU TIÊN KIỂM TRA MẬT KHẨU TỪ SUPABASE CLOUD (Đồng bộ toàn bộ thiết bị & trình duyệt)
+    if (supabase) {
       try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: cleanUsername, password })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success) {
-            onLogin(data.token, data.user);
+        const { data: users } = await supabase.from('users').select('*').eq('username', cleanUsername);
+        if (users && users.length > 0) {
+          const u = users[0];
+          let isPwValid = false;
+          if (u.password) {
+            isPwValid = (password === u.password || password === storedPw);
+          } else if (storedPw) {
+            isPwValid = (password === storedPw);
+          } else {
+            isPwValid = (password === 'admin123');
+          }
+
+          if (isPwValid) {
+            let mappedRole = u.role ? u.role.toUpperCase() : 'BGH';
+            if (mappedRole === 'ADMIN') mappedRole = 'BGH';
+            if (mappedRole === 'TEACHER') mappedRole = 'GIAO_VIEN';
+
+            const loggedUser = {
+              id: u.id,
+              username: u.username,
+              fullName: u.full_name || u.fullName || u.username,
+              role: mappedRole,
+              email: u.email || `${u.username}@thcsdongtan.edu.vn`
+            };
+
+            // Tự động đồng bộ mật khẩu mới nhất từ Cloud vào LocalStorage trình duyệt này
+            if (u.password) {
+              localStorage.setItem('user_password_' + cleanUsername, u.password);
+              localStorage.setItem('user_changed_password_' + cleanUsername, 'true');
+            }
+
+            onLogin('TOKEN_ADMIN_THCS_DONG_TAN_2026', loggedUser);
             return;
           }
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error('Lỗi kiểm tra mật khẩu Admin Supabase Cloud:', err);
+      }
+    }
+
+    // 2. Thử kiểm tra bộ nhớ LocalStorage nếu offline hoặc chưa tìm thấy trên Cloud
+    if (storedPw && password === storedPw) {
+      const dummyUser = cleanUsername === 'admin'
+        ? { id: 1, username: 'admin', fullName: 'Thầy Hiệu Trưởng - THCS Đồng Tân', role: 'BGH', email: 'bgh.thcsdongtan@langson.edu.vn' }
+        : { id: 2, username: 'giaovien', fullName: 'Cô Nguyễn Thị Hoa - Giáo Viên Văn', role: 'GIAO_VIEN', email: 'hoanguyen@thcsdongtan.edu.vn' };
+      onLogin('TOKEN_ADMIN_THCS_DONG_TAN_2026', dummyUser);
+      return;
     }
 
     // 3. Fallback mật khẩu mặc định admin123

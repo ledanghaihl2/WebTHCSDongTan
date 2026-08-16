@@ -77,17 +77,27 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
       return;
     }
 
-    // 2. Đồng bộ thay đổi mật khẩu lên Supabase Cloud Postgres
+    // 2. Đồng bộ thay đổi mật khẩu lên Supabase Cloud Postgres (Đồng bộ mọi thiết bị & trình duyệt)
     if (supabase && targetUsername) {
       try {
-        await supabase
-          .from('users')
-          .update({ password: newPassword })
-          .eq('username', targetUsername);
-      } catch (err) {}
+        const { data: existingUser } = await supabase.from('users').select('*').eq('username', targetUsername).maybeSingle();
+        if (existingUser) {
+          await supabase.from('users').update({ password: newPassword }).eq('username', targetUsername);
+        } else {
+          await supabase.from('users').insert([{
+            username: targetUsername,
+            password: newPassword,
+            full_name: targetUsername === 'admin' ? 'Thầy Hiệu Trưởng - THCS Đồng Tân' : 'Giáo Viên THCS Đồng Tân',
+            role: targetUsername === 'admin' ? 'BGH' : 'GIAO_VIEN',
+            status: 'ACTIVE'
+          }]);
+        }
+      } catch (err) {
+        console.error('Lỗi đồng bộ mật khẩu Supabase Cloud:', err);
+      }
     }
 
-    // 3. Lưu mật khẩu mới vào LocalStorage và cập nhật trạng thái
+    // 3. Lưu mật khẩu mới vào LocalStorage thiết bị hiện tại
     localStorage.setItem('user_password_' + targetUsername, newPassword);
     localStorage.setItem('user_changed_password_' + targetUsername, 'true');
 
