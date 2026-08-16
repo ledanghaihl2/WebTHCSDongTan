@@ -486,6 +486,10 @@ export default function App() {
   };
 
   const handleOpenUpload = (tab = 'docs') => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
     setUploadDefaultTab(tab);
     setShowUploadModal(true);
   };
@@ -493,6 +497,10 @@ export default function App() {
   const [bulkDefaultTab, setBulkDefaultTab] = useState('albums');
 
   const handleOpenBulkUpload = (type = 'albums') => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
     setBulkDefaultTab(type || 'albums');
     setShowBulkUploadModal(true);
   };
@@ -707,20 +715,29 @@ export default function App() {
             <div className="widget-header orange" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>📄 TRA CỨU VĂN BẢN CHỈ ĐẠO & QUY CHẾ THCS ĐỒNG TÂN</span>
 
-              <div style={{ display: 'flex', gap: '8px' }}>
+              {user ? (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    style={{ background: '#16a34a', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12px' }}
+                    onClick={() => handleOpenUpload('docs')}
+                  >
+                    📤 TẢI VĂN BẢN MỚI LÊN
+                  </button>
+                  <button 
+                    style={{ background: '#0284c7', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12px' }}
+                    onClick={() => handleOpenBulkUpload('docs')}
+                  >
+                    📦 TẢI LÊN HÀNG LOẠT
+                  </button>
+                </div>
+              ) : (
                 <button 
-                  style={{ background: '#16a34a', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12px' }}
-                  onClick={() => handleOpenUpload('docs')}
+                  style={{ background: '#0056a6', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12px' }}
+                  onClick={() => setShowLoginModal(true)}
                 >
-                  📤 TẢI VĂN BẢN MỚI LÊN
+                  🔒 ĐĂNG NHẬP ĐỂ ĐĂNG VĂN BẢN
                 </button>
-                <button 
-                  style={{ background: '#0284c7', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12px' }}
-                  onClick={handleOpenBulkUpload}
-                >
-                  📦 TẢI LÊN HÀNG LOẠT
-                </button>
-              </div>
+              )}
             </div>
             <div className="widget-body">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>

@@ -46,12 +46,21 @@ export default function VideosView({ videos = [], user, onOpenUpload, onUpdateVi
             <Video size={18} /> THƯ VIỆN VIDEO HOẠT ĐỘNG THCS ĐỒNG TÂN ({videoList.length} VIDEO)
           </span>
 
-          <button 
-            style={{ background: '#16a34a', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
-            onClick={() => onOpenUpload && onOpenUpload('videos')}
-          >
-            <Plus size={16} /> 📤 ĐĂNG & LƯU VIDEO MỚI
-          </button>
+          {user ? (
+            <button 
+              style={{ background: '#16a34a', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={() => onOpenUpload && onOpenUpload('videos')}
+            >
+              <Plus size={16} /> 📤 ĐĂNG & LƯU VIDEO MỚI
+            </button>
+          ) : (
+            <button 
+              style={{ background: '#0056a6', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              onClick={() => onOpenUpload && onOpenUpload('videos')}
+            >
+              🔒 ĐĂNG NHẬP ĐỂ ĐĂNG VIDEO
+            </button>
+          )}
         </div>
 
         <div className="widget-body" style={{ padding: '20px' }}>

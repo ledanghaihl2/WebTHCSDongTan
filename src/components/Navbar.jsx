@@ -59,15 +59,25 @@ export default function Navbar({ user, activeTab, setActiveTab, onOpenAdmin, onO
       </a>
 
       {/* Quick Upload Button */}
-      <a className="nav-item" style={{ background: '#16a34a', fontWeight: '700' }} onClick={onOpenUpload}>
+      <a 
+        className="nav-item" 
+        style={{ background: user ? '#16a34a' : '#0369a1', fontWeight: '700' }} 
+        onClick={onOpenUpload}
+        title={user ? "Đăng tệp tin mới" : "Chỉ tài khoản thành viên mới được đăng tệp"}
+      >
         <Upload size={15} />
-        <span>📤 Tải Đơn</span>
+        <span>{user ? '📤 Tải Đơn' : '🔒 Đăng Bài'}</span>
       </a>
 
       {/* Bulk Upload Button */}
-      <a className="nav-item" style={{ background: '#0284c7', fontWeight: '700' }} onClick={onOpenBulkUpload}>
+      <a 
+        className="nav-item" 
+        style={{ background: user ? '#0284c7' : '#0f766e', fontWeight: '700' }} 
+        onClick={onOpenBulkUpload}
+        title={user ? "Tải lên hàng loạt" : "Chỉ tài khoản thành viên mới được tải hàng loạt"}
+      >
         <Layers size={15} />
-        <span>📦 Tải Hàng Loạt</span>
+        <span>{user ? '📦 Tải Hàng Loạt' : '🔒 Tải Hàng Loạt'}</span>
       </a>
 
       {/* Logged in User Menu OR Admin Portal Button */}
