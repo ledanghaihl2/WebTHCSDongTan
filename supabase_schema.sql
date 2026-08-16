@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS public.announcements (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 10. BẢNG CẤU HÌNH TRƯỜNG HỌC & BANNER (site_config)
+-- 10. BẢNG CẤU HÌNH TRƯỜNG HỌC & BANNER & TỔ TRƯỞNG (site_config)
 CREATE TABLE IF NOT EXISTS public.site_config (
   id INT PRIMARY KEY DEFAULT 1,
   school_name TEXT DEFAULT 'TRƯỜNG THCS ĐỒNG TÂN',
@@ -133,8 +133,25 @@ CREATE TABLE IF NOT EXISTS public.site_config (
   email TEXT DEFAULT 'thcsdongtan.huulung@langson.edu.vn',
   logo_url TEXT DEFAULT '/images/school-logo.jpg',
   banner_bg TEXT DEFAULT '/images/school-banner.png',
+  principal TEXT DEFAULT 'Thầy Hiệu Trưởng - THCS Đồng Tân',
+  principal_avatar TEXT DEFAULT 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&q=80',
+  vice_principal TEXT DEFAULT 'Cô Phó Hiệu Trưởng - THCS Đồng Tân',
+  vice_principal_avatar TEXT DEFAULT 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&q=80',
+  team_leader_1_name TEXT DEFAULT 'Thầy Nguyễn Văn Nam',
+  team_leader_1_title TEXT DEFAULT 'Tổ trưởng Tổ Toán - KHTN',
+  team_leader_1_avatar TEXT DEFAULT 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80',
+  team_leader_2_name TEXT DEFAULT 'Cô Trần Thị Thu Hà',
+  team_leader_2_title TEXT DEFAULT 'Tổ trưởng Tổ Văn - KHXH',
+  team_leader_2_avatar TEXT DEFAULT 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80',
+  team_leader_3_name TEXT DEFAULT 'Thầy Lê Hoàng Long',
+  team_leader_3_title TEXT DEFAULT 'Tổ trưởng Tổ Ngoại Ngữ - Nghệ Thuật',
+  team_leader_3_avatar TEXT DEFAULT 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80',
+  team_leader_4_name TEXT DEFAULT 'Cô Phạm Phương Thảo',
+  team_leader_4_title TEXT DEFAULT 'Tổ trưởng Tổ Hành Chính - Văn Thể',
+  team_leader_4_avatar TEXT DEFAULT 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&q=80',
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
 
 -- -------------------------------------------------------------------------
 -- PHẦN 2: BẬT BẢO MẬT ROW LEVEL SECURITY (KHI BẢNG ĐÃ TỒN TẠI)

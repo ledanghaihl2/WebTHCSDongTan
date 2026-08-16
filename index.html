@@ -11,6 +11,35 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <script>
+      // Kiểm tra nếu người dùng mở file index.html trực tiếp từ ổ đĩa (file://)
+      if (window.location.protocol === 'file:') {
+        setTimeout(function() {
+          var rootEl = document.getElementById('root');
+          if (rootEl && rootEl.children.length === 0) {
+            rootEl.innerHTML = `
+              <div style="font-family: 'Roboto', sans-serif; padding: 40px 20px; max-width: 650px; margin: 60px auto; background: #ffffff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border-top: 6px solid #0056a6; text-align: center;">
+                <div style="font-size: 50px; margin-bottom: 10px;">🚀</div>
+                <h2 style="color: #003a73; margin-bottom: 12px; font-size: 22px;">HƯỚNG DẪN KHỞI ĐỘNG CỔNG THÔNG TIN THCS ĐỒNG TÂN</h2>
+                <p style="color: #475569; font-size: 14.5px; line-height: 1.6; margin-bottom: 20px;">
+                  Trình duyệt chặn mở trực tiếp nguồn file React Javascript (<code>file://</code>).<br/>
+                  Để xem đầy đủ giao diện và dữ liệu ngoại tuyến (Offline), Thầy/Cô vui lòng chạy tệp:
+                </p>
+                <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; font-weight: bold; color: #0f172a; font-size: 16px; margin-bottom: 20px; border: 1px dashed #94a3b8;">
+                  📁 <strong>chay-website.bat</strong> (Hoặc mở thư mục <code>dist/index.html</code>)
+                </div>
+                <p style="color: #166534; background: #f0fdf4; padding: 10px; borderRadius: 6px; font-size: 13px;">
+                  💡 Website sẽ tự động khởi động tại địa chỉ: <strong>http://localhost:3001</strong> (Không cần mạng internet).
+                </p>
+              </div>
+            `;
+          }
+        }, 1000);
+      }
+    </script>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
+

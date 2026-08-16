@@ -133,14 +133,39 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // Global Dynamic Site State
-  const [siteConfig, setSiteConfig] = useState(INITIAL_SITE_CONFIG);
-  const [newsList, setNewsList] = useState(INITIAL_NEWS_LIST);
+  // Global Dynamic Site State with LocalStorage Persistence for Offline Reliability
+  const [siteConfig, setSiteConfig] = useState(() => {
+    const saved = localStorage.getItem('portal_site_config');
+    return saved ? JSON.parse(saved) : INITIAL_SITE_CONFIG;
+  });
+
+  const [newsList, setNewsList] = useState(() => {
+    const saved = localStorage.getItem('portal_news');
+    return saved ? JSON.parse(saved) : INITIAL_NEWS_LIST;
+  });
+
   const [featuredNews, setFeaturedNews] = useState(INITIAL_FEATURED_NEWS);
-  const [documents, setDocuments] = useState(INITIAL_DOCUMENTS);
-  const [videos, setVideos] = useState(INITIAL_VIDEOS);
-  const [albums, setAlbums] = useState(INITIAL_ALBUMS);
-  const [resources, setResources] = useState(INITIAL_RESOURCES);
+
+  const [documents, setDocuments] = useState(() => {
+    const saved = localStorage.getItem('portal_docs');
+    return saved ? JSON.parse(saved) : INITIAL_DOCUMENTS;
+  });
+
+  const [videos, setVideos] = useState(() => {
+    const saved = localStorage.getItem('portal_videos');
+    return saved ? JSON.parse(saved) : INITIAL_VIDEOS;
+  });
+
+  const [albums, setAlbums] = useState(() => {
+    const saved = localStorage.getItem('portal_albums');
+    return saved ? JSON.parse(saved) : INITIAL_ALBUMS;
+  });
+
+  const [resources, setResources] = useState(() => {
+    const saved = localStorage.getItem('portal_resources');
+    return saved ? JSON.parse(saved) : INITIAL_RESOURCES;
+  });
+
   const [schedules, setSchedules] = useState(INITIAL_SCHEDULES);
   const [pendingUsers, setPendingUsers] = useState([]);
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
@@ -162,6 +187,24 @@ export default function App() {
   // Admin Auth State
   const [token, setToken] = useState(localStorage.getItem('adminToken') || '');
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('adminUser') || 'null'));
+
+  // Sync states to LocalStorage
+  useEffect(() => {
+    localStorage.setItem('portal_site_config', JSON.stringify(siteConfig));
+  }, [siteConfig]);
+
+  useEffect(() => {
+    localStorage.setItem('portal_videos', JSON.stringify(videos));
+  }, [videos]);
+
+  useEffect(() => {
+    localStorage.setItem('portal_news', JSON.stringify(newsList));
+  }, [newsList]);
+
+  useEffect(() => {
+    localStorage.setItem('portal_docs', JSON.stringify(documents));
+  }, [documents]);
+
 
   // Main Live Data Fetcher from Supabase Cloud Postgres
   const fetchCloudData = async () => {
@@ -484,6 +527,15 @@ export default function App() {
     localStorage.removeItem('adminUser');
   };
 
+  const handleDeleteVideo = async (videoId) => {
+    setVideos(prev => prev.filter(v => v.id !== videoId));
+    if (supabase) {
+      try {
+        await supabase.from('videos').delete().eq('id', videoId);
+      } catch (err) {}
+    }
+  };
+
   const handleSearch = async (query) => {
     if (!query) {
       fetchCloudData();
@@ -540,8 +592,9 @@ export default function App() {
       ) : activeTab === 'albums' ? (
         <AlbumsView albums={albums} />
       ) : activeTab === 'videos' ? (
-        <VideosView videos={videos} onOpenUpload={handleOpenUpload} />
+        <VideosView videos={videos} onOpenUpload={handleOpenUpload} onDeleteVideo={handleDeleteVideo} />
       ) : activeTab === 'resources' ? (
+
         <ResourcesView resources={resources} onOpenUpload={handleOpenUpload} onOpenBulkUpload={handleOpenBulkUpload} />
       ) : activeTab === 'schedule' ? (
         <ScheduleView schedule={schedules} />

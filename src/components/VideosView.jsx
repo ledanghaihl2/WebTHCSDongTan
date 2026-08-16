@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Video, Play, Eye, ExternalLink, Upload, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Video, Play, Eye, ExternalLink, Upload, AlertTriangle, Trash2, Plus } from 'lucide-react';
 
-export default function VideosView({ videos = [], onOpenUpload }) {
+export default function VideosView({ videos = [], onOpenUpload, onDeleteVideo }) {
   const videoList = videos.length > 0 ? videos : [
     {
       id: 1,
@@ -22,12 +22,18 @@ export default function VideosView({ videos = [], onOpenUpload }) {
   const [activeVideo, setActiveVideo] = useState(videoList[0]);
   const [iframeError, setIframeError] = useState(false);
 
+  useEffect(() => {
+    if (videoList.length > 0 && (!activeVideo || !videoList.find(v => v.id === activeVideo.id))) {
+      setActiveVideo(videoList[0]);
+    }
+  }, [videos]);
+
   const handleSelectVideo = (vid) => {
     setActiveVideo(vid);
     setIframeError(false);
   };
 
-  const isLocalVideo = activeVideo?.videoUrl || (activeVideo?.fileUrl && (activeVideo.fileUrl.endsWith('.mp4') || activeVideo.fileUrl.startsWith('/uploads')));
+  const isLocalVideo = activeVideo?.videoUrl || (activeVideo?.fileUrl && (activeVideo.fileUrl.endsWith('.mp4') || activeVideo.fileUrl.startsWith('data:video') || activeVideo.fileUrl.startsWith('/uploads')));
   const videoSrc = activeVideo?.videoUrl || activeVideo?.fileUrl;
 
   return (
@@ -35,14 +41,14 @@ export default function VideosView({ videos = [], onOpenUpload }) {
       <div className="widget-box">
         <div className="widget-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Video size={18} /> THƯ VIỆN VIDEO HOẠT ĐỘNG THCS ĐỒNG TÂN
+            <Video size={18} /> THƯ VIỆN VIDEO HOẠT ĐỘNG THCS ĐỒNG TÂN ({videoList.length} VIDEO)
           </span>
 
           <button 
-            style={{ background: '#16a34a', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}
+            style={{ background: '#16a34a', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
             onClick={() => onOpenUpload && onOpenUpload('videos')}
           >
-            <Upload size={14} /> 📤 ĐĂNG / TẢI VIDEO MỚI LÊN
+            <Plus size={16} /> 📤 ĐĂNG & LƯU VIDEO MỚI
           </button>
         </div>
 
@@ -73,16 +79,18 @@ export default function VideosView({ videos = [], onOpenUpload }) {
               ) : (
                 <div style={{ padding: '60px 20px', color: 'white', textAlign: 'center', background: '#1e293b' }}>
                   <AlertTriangle size={40} color="#f59e0b" style={{ marginBottom: '10px' }} />
-                  <h3 style={{ fontSize: '16px', color: '#f59e0b' }}>Không thể tự phát trực tiếp Video này trong trình duyệt</h3>
-                  <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '15px' }}>Vui lòng mở xem trực tiếp trên YouTube bằng nút bên dưới:</p>
-                  <a 
-                    href={activeVideo.externalLink || `https://www.youtube.com/watch?v=${activeVideo.youtubeId}`} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    style={{ background: '#ef4444', color: 'white', textDecoration: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                  >
-                    <ExternalLink size={16} /> Mở Trực Tiếp Trên YouTube
-                  </a>
+                  <h3 style={{ fontSize: '16px', color: '#f59e0b' }}>Không thể phát trực tiếp Video này</h3>
+                  <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '15px' }}>Vui lòng kiểm tra lại liên kết video hoặc tải tệp .MP4 mới lên!</p>
+                  {activeVideo.externalLink && (
+                    <a 
+                      href={activeVideo.externalLink} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      style={{ background: '#ef4444', color: 'white', textDecoration: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <ExternalLink size={16} /> Mở Trang Video Gốc
+                    </a>
+                  )}
                 </div>
               )}
               
@@ -92,25 +100,35 @@ export default function VideosView({ videos = [], onOpenUpload }) {
                     🎬 {activeVideo.title}
                   </h2>
                   <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                    👁️ {activeVideo.views || 100} lượt xem | THCS Đồng Tân Channel
+                    👁️ {activeVideo.views || 100} lượt xem | Kênh Video THCS Đồng Tân
                   </span>
                 </div>
 
-                <a 
-                  href={activeVideo.externalLink || (activeVideo.youtubeId ? `https://www.youtube.com/watch?v=${activeVideo.youtubeId}` : '#')}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ background: '#ef4444', color: 'white', textDecoration: 'none', padding: '8px 16px', borderRadius: '4px', fontSize: '13px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <ExternalLink size={15} /> Mở Trang YouTube Gốc
-                </a>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  {onDeleteVideo && (
+                    <button 
+                      onClick={() => onDeleteVideo(activeVideo.id)}
+                      style={{ background: '#dc2626', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '4px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                    >
+                      <Trash2 size={14} /> Xóa Video
+                    </button>
+                  )}
+                  <a 
+                    href={activeVideo.externalLink || (activeVideo.youtubeId ? `https://www.youtube.com/watch?v=${activeVideo.youtubeId}` : '#')}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ background: '#ef4444', color: 'white', textDecoration: 'none', padding: '8px 16px', borderRadius: '4px', fontSize: '13px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <ExternalLink size={15} /> Mở YouTube
+                  </a>
+                </div>
               </div>
             </div>
           )}
 
           {/* List of Available Videos */}
           <h3 style={{ fontSize: '15px', color: '#003a73', marginBottom: '12px', fontWeight: '700' }}>
-            DANH SÁCH VIDEO CỤM HOẠT ĐỘNG
+            DANH SÁCH VIDEO CỤM HOẠT ĐỘNG ({videoList.length})
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '15px' }}>
@@ -124,7 +142,8 @@ export default function VideosView({ videos = [], onOpenUpload }) {
                   overflow: 'hidden', 
                   cursor: 'pointer',
                   background: 'white',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
+                  position: 'relative'
                 }}
               >
                 <div style={{ position: 'relative', height: '135px' }}>
@@ -141,8 +160,17 @@ export default function VideosView({ videos = [], onOpenUpload }) {
                   <h4 style={{ fontSize: '13px', color: '#003a73', margin: '0 0 6px 0', lineHeight: '1.3', fontWeight: '700', height: '34px', overflow: 'hidden' }}>
                     {vid.title}
                   </h4>
-                  <div style={{ fontSize: '11.5px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Eye size={12} /> {vid.views || 100} lượt xem
+                  <div style={{ fontSize: '11.5px', color: '#64748b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span><Eye size={12} /> {vid.views || 100} lượt xem</span>
+                    {onDeleteVideo && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); onDeleteVideo(vid.id); }}
+                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px 4px' }}
+                        title="Xóa video này"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -154,3 +182,4 @@ export default function VideosView({ videos = [], onOpenUpload }) {
     </div>
   );
 }
+

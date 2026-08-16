@@ -39,8 +39,32 @@ export default function AdminPortal({
     phone: siteConfig.phone || '(0205) 3885.6789',
     email: siteConfig.email || 'thcsdongtan.huulung@langson.edu.vn',
     logoUrl: siteConfig.logoUrl || '/images/school-logo.jpg',
-    bannerBg: siteConfig.bannerBg || '/images/school-banner.png'
+    bannerBg: siteConfig.bannerBg || '/images/school-banner.png',
+    
+    // Ban Giám Hiệu
+    principal: siteConfig.principal || 'Thầy Hiệu Trưởng - THCS Đồng Tân',
+    principalAvatar: siteConfig.principalAvatar || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&q=80',
+    vicePrincipal: siteConfig.vicePrincipal || 'Cô Phó Hiệu Trưởng - THCS Đồng Tân',
+    vicePrincipalAvatar: siteConfig.vicePrincipalAvatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&q=80',
+
+    // 4 Tổ Trưởng Chuyên Môn
+    teamLeader1Name: siteConfig.teamLeader1Name || 'Thầy Nguyễn Văn Nam',
+    teamLeader1Title: siteConfig.teamLeader1Title || 'Tổ trưởng Tổ Toán - KHTN',
+    teamLeader1Avatar: siteConfig.teamLeader1Avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80',
+
+    teamLeader2Name: siteConfig.teamLeader2Name || 'Cô Trần Thị Thu Hà',
+    teamLeader2Title: siteConfig.teamLeader2Title || 'Tổ trưởng Tổ Văn - KHXH',
+    teamLeader2Avatar: siteConfig.teamLeader2Avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80',
+
+    teamLeader3Name: siteConfig.teamLeader3Name || 'Thầy Lê Hoàng Long',
+    teamLeader3Title: siteConfig.teamLeader3Title || 'Tổ trưởng Tổ Ngoại Ngữ - Nghệ Thuật',
+    teamLeader3Avatar: siteConfig.teamLeader3Avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80',
+
+    teamLeader4Name: siteConfig.teamLeader4Name || 'Cô Phạm Phương Thảo',
+    teamLeader4Title: siteConfig.teamLeader4Title || 'Tổ trưởng Tổ Hành Chính - Văn Thể',
+    teamLeader4Avatar: siteConfig.teamLeader4Avatar || 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=200&q=80'
   });
+
 
   // User Management State
   const [userList, setUserList] = useState(() => {
@@ -636,11 +660,81 @@ export default function AdminPortal({
             </div>
           </div>
 
+          {/* QUẢN LÝ BAN GIÁM HIỆU & 4 TỔ TRƯỞNG CHUYÊN MÔN */}
+          <div style={{ background: 'white', padding: '15px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+            <h4 style={{ fontSize: '14px', color: '#0056a6', marginBottom: '12px', fontWeight: '700', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>
+              👨‍🏫 CẤU HÌNH BAN GIÁM HIỆU & 4 TỔ TRƯỞNG CHUYÊN MÔN
+            </h4>
+            
+            {/* Hiệu Trưởng & Phó Hiệu Trưởng */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px', paddingBottom: '15px', borderBottom: '1px dashed #cbd5e1' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px', color: '#003a73' }}>Họ tên Hiệu Trưởng:</label>
+                <input type="text" value={configState.principal} onChange={(e) => setConfigState({ ...configState, principal: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '6px' }} />
+                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: '600', marginBottom: '2px' }}>Ảnh chân dung Hiệu Trưởng:</label>
+                <input type="file" onChange={(e) => handleFileUpload(e.target.files[0], (url) => setConfigState({ ...configState, principalAvatar: url }))} style={{ fontSize: '11px', marginBottom: '4px' }} />
+                <input type="text" value={configState.principalAvatar} onChange={(e) => setConfigState({ ...configState, principalAvatar: e.target.value })} style={{ width: '100%', padding: '5px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px' }} placeholder="Link URL ảnh chân dung..." />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px', color: '#003a73' }}>Họ tên Phó Hiệu Trưởng Chuyên Môn:</label>
+                <input type="text" value={configState.vicePrincipal} onChange={(e) => setConfigState({ ...configState, vicePrincipal: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '6px' }} />
+                <label style={{ display: 'block', fontSize: '11.5px', fontWeight: '600', marginBottom: '2px' }}>Ảnh chân dung Phó Hiệu Trưởng:</label>
+                <input type="file" onChange={(e) => handleFileUpload(e.target.files[0], (url) => setConfigState({ ...configState, vicePrincipalAvatar: url }))} style={{ fontSize: '11px', marginBottom: '4px' }} />
+                <input type="text" value={configState.vicePrincipalAvatar} onChange={(e) => setConfigState({ ...configState, vicePrincipalAvatar: e.target.value })} style={{ width: '100%', padding: '5px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px' }} placeholder="Link URL ảnh chân dung..." />
+              </div>
+            </div>
+
+            {/* 4 TỔ TRƯỞNG CHUYÊN MÔN */}
+            <h5 style={{ fontSize: '13px', color: '#b45309', marginBottom: '10px', fontWeight: '700' }}>
+              🎖️ THÔNG TIN 4 TỔ TRƯỞNG CHUYÊN MÔN
+            </h5>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              {/* Tổ 1 */}
+              <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                <strong style={{ fontSize: '12px', color: '#0056a6', display: 'block', marginBottom: '6px' }}>1. Tổ Trưởng Tổ 1 (Ví dụ: Toán - KHTN)</strong>
+                <input type="text" value={configState.teamLeader1Name} onChange={(e) => setConfigState({ ...configState, teamLeader1Name: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '4px', fontSize: '12px' }} placeholder="Họ và tên Tổ Trưởng 1..." />
+                <input type="text" value={configState.teamLeader1Title} onChange={(e) => setConfigState({ ...configState, teamLeader1Title: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '4px', fontSize: '12px' }} placeholder="Chức danh / Tên Tổ..." />
+                <input type="file" onChange={(e) => handleFileUpload(e.target.files[0], (url) => setConfigState({ ...configState, teamLeader1Avatar: url }))} style={{ fontSize: '11px', marginBottom: '2px' }} />
+                <input type="text" value={configState.teamLeader1Avatar} onChange={(e) => setConfigState({ ...configState, teamLeader1Avatar: e.target.value })} style={{ width: '100%', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px' }} placeholder="Link URL ảnh chân dung..." />
+              </div>
+
+              {/* Tổ 2 */}
+              <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                <strong style={{ fontSize: '12px', color: '#0056a6', display: 'block', marginBottom: '6px' }}>2. Tổ Trưởng Tổ 2 (Ví dụ: Văn - KHXH)</strong>
+                <input type="text" value={configState.teamLeader2Name} onChange={(e) => setConfigState({ ...configState, teamLeader2Name: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '4px', fontSize: '12px' }} placeholder="Họ và tên Tổ Trưởng 2..." />
+                <input type="text" value={configState.teamLeader2Title} onChange={(e) => setConfigState({ ...configState, teamLeader2Title: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '4px', fontSize: '12px' }} placeholder="Chức danh / Tên Tổ..." />
+                <input type="file" onChange={(e) => handleFileUpload(e.target.files[0], (url) => setConfigState({ ...configState, teamLeader2Avatar: url }))} style={{ fontSize: '11px', marginBottom: '2px' }} />
+                <input type="text" value={configState.teamLeader2Avatar} onChange={(e) => setConfigState({ ...configState, teamLeader2Avatar: e.target.value })} style={{ width: '100%', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px' }} placeholder="Link URL ảnh chân dung..." />
+              </div>
+
+              {/* Tổ 3 */}
+              <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                <strong style={{ fontSize: '12px', color: '#0056a6', display: 'block', marginBottom: '6px' }}>3. Tổ Trưởng Tổ 3 (Ví dụ: Ngoại Ngữ - Nghệ Thuật)</strong>
+                <input type="text" value={configState.teamLeader3Name} onChange={(e) => setConfigState({ ...configState, teamLeader3Name: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '4px', fontSize: '12px' }} placeholder="Họ và tên Tổ Trưởng 3..." />
+                <input type="text" value={configState.teamLeader3Title} onChange={(e) => setConfigState({ ...configState, teamLeader3Title: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '4px', fontSize: '12px' }} placeholder="Chức danh / Tên Tổ..." />
+                <input type="file" onChange={(e) => handleFileUpload(e.target.files[0], (url) => setConfigState({ ...configState, teamLeader3Avatar: url }))} style={{ fontSize: '11px', marginBottom: '2px' }} />
+                <input type="text" value={configState.teamLeader3Avatar} onChange={(e) => setConfigState({ ...configState, teamLeader3Avatar: e.target.value })} style={{ width: '100%', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px' }} placeholder="Link URL ảnh chân dung..." />
+              </div>
+
+              {/* Tổ 4 */}
+              <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                <strong style={{ fontSize: '12px', color: '#0056a6', display: 'block', marginBottom: '6px' }}>4. Tổ Trưởng Tổ 4 (Ví dụ: Hành Chính - Thể Dục)</strong>
+                <input type="text" value={configState.teamLeader4Name} onChange={(e) => setConfigState({ ...configState, teamLeader4Name: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '4px', fontSize: '12px' }} placeholder="Họ và tên Tổ Trưởng 4..." />
+                <input type="text" value={configState.teamLeader4Title} onChange={(e) => setConfigState({ ...configState, teamLeader4Title: e.target.value })} style={{ width: '100%', padding: '6px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '4px', fontSize: '12px' }} placeholder="Chức danh / Tên Tổ..." />
+                <input type="file" onChange={(e) => handleFileUpload(e.target.files[0], (url) => setConfigState({ ...configState, teamLeader4Avatar: url }))} style={{ fontSize: '11px', marginBottom: '2px' }} />
+                <input type="text" value={configState.teamLeader4Avatar} onChange={(e) => setConfigState({ ...configState, teamLeader4Avatar: e.target.value })} style={{ width: '100%', padding: '4px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px' }} placeholder="Link URL ảnh chân dung..." />
+              </div>
+            </div>
+          </div>
+
           <button type="submit" style={{ background: '#16a34a', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', justifySelf: 'start', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px' }}>
-            <Save size={16} /> 💾 LƯU THAY ĐỔI THÔNG TIN TRƯỜNG & BANNER
+            <Save size={16} /> 💾 LƯU THAY ĐỔI CẤU HÌNH NHÀ TRƯỜNG & TỔ TRƯỞNG
           </button>
         </form>
       )}
+
 
       {/* Tab Manage News: Quản lý & Sửa / Xóa Bài viết */}
       {adminTab === 'manageNews' && (
