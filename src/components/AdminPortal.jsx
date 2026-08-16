@@ -24,7 +24,7 @@ export default function AdminPortal({
   onRefreshData 
 }) {
   const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin123');
+  const [password, setPassword] = useState(() => localStorage.getItem('user_password_admin') || 'admin123');
   const [loginError, setLoginError] = useState('');
   const [adminTab, setAdminTab] = useState('users');
   const [message, setMessage] = useState('');
@@ -388,7 +388,7 @@ export default function AdminPortal({
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
               style={{ width: '100%', padding: '8px 10px', border: '1px solid #94a3b8', borderRadius: '4px' }}
-              placeholder="Mật khẩu mặc định: admin123"
+              placeholder={localStorage.getItem('user_changed_password_' + username) === 'true' ? "Nhập mật khẩu mới..." : "Mật khẩu mặc định: admin123"}
               required 
             />
           </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, UploadCloud, Layers, CheckCircle, FileText, BookOpen, Image, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase, uploadFileToSupabase } from '../lib/supabaseClient';
 
@@ -9,6 +9,7 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const stopRequestedRef = useRef(false);
 
   // Form default batch metadata
   const [defaultSubject, setDefaultSubject] = useState('Toán 9');
@@ -43,11 +44,9 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
     setFileList(prev => prev.map(item => item.id === id ? { ...item, title: newTitle } : item));
   };
 
-  const [stopRequested, setStopRequested] = useState(false);
-
   const handleStopUpload = () => {
-    setStopRequested(true);
-    setMessage('🛑 ĐÃ PHÁT LỆNH DỪNG TẢI LÊN! Đang lưu các tệp tin đã nạp...');
+    stopRequestedRef.current = true;
+    setMessage('🛑 ĐÃ DỪNG TẢI LÊN! Đang hoàn tất lưu danh sách...');
   };
 
   const handleStartBulkUpload = async () => {
@@ -56,7 +55,7 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
       return;
     }
 
-    setStopRequested(false);
+    stopRequestedRef.current = false;
     setUploading(true);
     setError('');
     setMessage('🚀 Đang tải lên hàng loạt các tệp tin...');
@@ -67,7 +66,7 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
     const batchItemsToInsert = [];
 
     for (let i = 0; i < fileList.length; i++) {
-      if (stopRequested) {
+      if (stopRequestedRef.current) {
         break;
       }
 
@@ -88,6 +87,7 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
 
       if (bulkType === 'resources') {
         batchItemsToInsert.push({
+          id: Date.now() + i,
           title: item.title || item.name,
           type: defaultResourceType,
           subject: defaultSubject,
@@ -100,6 +100,7 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
         });
       } else if (bulkType === 'docs') {
         batchItemsToInsert.push({
+          id: Date.now() + i,
           code: `VB-${(Date.now() + i).toString().slice(-4)}`,
           title: item.title || item.name,
           category: defaultDocCategory,
@@ -111,6 +112,7 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
         });
       } else if (bulkType === 'albums') {
         batchItemsToInsert.push({
+          id: Date.now() + i,
           title: item.title || item.name,
           date: new Date().toLocaleDateString('vi-VN'),
           photos_count: 1,
@@ -131,7 +133,7 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
     setProgress(100);
     setUploading(false);
     
-    if (stopRequested) {
+    if (stopRequestedRef.current) {
       setMessage(`🛑 ĐÃ DỪNG TẢI LÊN THEO YÊU CẦU! Đã lưu thành công ${completedCount}/${total} tệp tin.`);
     } else {
       setMessage(`🎉 ĐÃ TẢI LÊN HÀNG LOẠT THÀNH CÔNG ${completedCount}/${total} TỆP TIN LÊN HỆ THỐNG!`);
@@ -141,18 +143,19 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
     try {
       const storageKey = bulkType === 'docs' ? 'portal_docs' : (bulkType === 'resources' ? 'portal_resources' : 'portal_albums');
       const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      const updated = [...batchItemsToInsert.map((b, idx) => ({ ...b, id: Date.now() + idx })), ...existing];
+      const updated = [...batchItemsToInsert, ...existing];
       localStorage.setItem(storageKey, JSON.stringify(updated));
     } catch (e) {}
 
     // Gửi đồng bộ ngầm không chặn giao diện (Non-blocking background sync) lên Supabase Cloud
     if (supabase && batchItemsToInsert.length > 0) {
       const tableName = bulkType === 'docs' ? 'documents' : (bulkType === 'resources' ? 'resources' : 'albums');
-      supabase.from(tableName).insert(batchItemsToInsert).then(() => {}).catch(() => {});
+      const cleanDbItems = batchItemsToInsert.map(({ id, ...rest }) => rest);
+      supabase.from(tableName).insert(cleanDbItems).then(() => {}).catch(() => {});
     }
 
     if (onBulkUploadSuccess) {
-      onBulkUploadSuccess();
+      onBulkUploadSuccess(bulkType, batchItemsToInsert);
     }
   };
 

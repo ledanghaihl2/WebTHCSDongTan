@@ -725,9 +725,16 @@ export default function App() {
       {showBulkUploadModal && (
         <BulkUploadModal 
           onClose={() => setShowBulkUploadModal(false)}
-          onBulkUploadSuccess={() => {
-            fetchCloudData();
-            setShowBulkUploadModal(false);
+          onBulkUploadSuccess={(bType, newItems) => {
+            if (newItems && newItems.length > 0) {
+              if (bType === 'albums') {
+                setAlbums(prev => [...newItems, ...prev]);
+              } else if (bType === 'docs') {
+                setDocuments(prev => [...newItems, ...prev]);
+              } else if (bType === 'resources') {
+                setResources(prev => [...newItems, ...prev]);
+              }
+            }
           }}
         />
       )}

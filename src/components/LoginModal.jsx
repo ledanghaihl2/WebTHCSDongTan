@@ -195,7 +195,13 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginTop: '10px' }}>
               <button
                 type="button"
-                onClick={() => { setUsername('hocsinh01'); setPassword('admin123'); setError(''); }}
+                onClick={() => {
+                  const uname = 'hocsinh01';
+                  const pw = localStorage.getItem('user_password_' + uname) || 'admin123';
+                  setUsername(uname);
+                  setPassword(pw);
+                  setError('');
+                }}
                 style={{ background: '#e0f2fe', border: '1px solid #7dd3fc', color: '#0369a1', padding: '6px 4px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', textAlign: 'center' }}
                 title="Bấm để nạp sẵn tài khoản Học Sinh An 9A1"
               >
@@ -203,7 +209,13 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
               </button>
               <button
                 type="button"
-                onClick={() => { setUsername('phuhuynh01'); setPassword('admin123'); setError(''); }}
+                onClick={() => {
+                  const uname = 'phuhuynh01';
+                  const pw = localStorage.getItem('user_password_' + uname) || 'admin123';
+                  setUsername(uname);
+                  setPassword(pw);
+                  setError('');
+                }}
                 style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#b45309', padding: '6px 4px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', textAlign: 'center' }}
                 title="Bấm để nạp sẵn tài khoản Phụ Huynh An 9A1"
               >
@@ -211,7 +223,13 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
               </button>
               <button
                 type="button"
-                onClick={() => { setUsername('giaovien'); setPassword('admin123'); setError(''); }}
+                onClick={() => {
+                  const uname = 'giaovien';
+                  const pw = localStorage.getItem('user_password_' + uname) || 'admin123';
+                  setUsername(uname);
+                  setPassword(pw);
+                  setError('');
+                }}
                 style={{ background: '#f3e8ff', border: '1px solid #ddd6fe', color: '#6b21a8', padding: '6px 4px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', textAlign: 'center' }}
                 title="Bấm để nạp sẵn tài khoản Giáo Viên Hoa"
               >
@@ -219,7 +237,13 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
               </button>
               <button
                 type="button"
-                onClick={() => { setUsername('admin'); setPassword('admin123'); setError(''); }}
+                onClick={() => {
+                  const uname = 'admin';
+                  const pw = localStorage.getItem('user_password_' + uname) || 'admin123';
+                  setUsername(uname);
+                  setPassword(pw);
+                  setError('');
+                }}
                 style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '6px 4px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', textAlign: 'center' }}
                 title="Bấm để nạp sẵn tài khoản Ban Giám Hiệu"
               >
@@ -293,7 +317,12 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
               >
                 {showPassword ? '🙈 Ẩn mật khẩu' : '👁️ Hiện mật khẩu chữ rõ ràng'}
               </button>
-              <span style={{ fontSize: '11.5px', color: '#94a3b8' }}>Mật khẩu thử: <strong>admin123</strong></span>
+              <span style={{ fontSize: '11.5px', color: '#64748b' }}>
+                {localStorage.getItem('user_changed_password_' + username) === 'true'
+                  ? <span style={{ color: '#16a34a', fontWeight: '700' }}>✓ Đã đổi mật khẩu mới</span>
+                  : <>Mật khẩu thử: <strong>admin123</strong></>
+                }
+              </span>
             </div>
 
             <button 
