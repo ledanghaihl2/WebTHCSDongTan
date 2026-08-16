@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Video, Play, Eye, ExternalLink, Upload, AlertTriangle, Trash2, Plus, Edit } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 // Robust YouTube ID Extractor (Hỗ trợ tất cả dạng link: watch?v=, youtu.be/, shorts/, embed/)
 function extractYouTubeId(urlOrId) {
@@ -53,7 +54,7 @@ export default function VideosView({ videos = [], user, onOpenUpload, onAddNewIt
     setIframeError(false);
   };
 
-  const handleCreateVideoSubmit = (e) => {
+  const handleCreateVideoSubmit = async (e) => {
     e.preventDefault();
     const newItemId = Date.now();
     const inputStr = newVideoLink || newVideoFileUrl || '';
@@ -72,8 +73,26 @@ export default function VideosView({ videos = [], user, onOpenUpload, onAddNewIt
       videoUrl: finalVideoUrl,
       thumbnailUrl: finalThumb,
       views: 1,
-      externalLink: newVideoLink
+      externalLink: newVideoLink || finalVideoUrl
     };
+
+    // 1. Chuyển ngay khung phát video chính trên đầu màn hình sang Video mới đăng!
+    setActiveVideo(newVidObj);
+
+    // 2. Đồng bộ lưu dữ liệu lên Supabase Cloud Postgres
+    if (supabase) {
+      try {
+        await supabase.from('videos').insert([{
+          title: newVidObj.title,
+          youtube_id: newVidObj.youtubeId,
+          video_url: newVidObj.videoUrl,
+          thumbnail_url: newVidObj.thumbnailUrl,
+          external_link: newVidObj.externalLink
+        }]);
+      } catch (err) {
+        console.error('Lỗi lưu video Supabase:', err);
+      }
+    }
 
     if (onAddNewItem) {
       onAddNewItem('videos', newVidObj);
