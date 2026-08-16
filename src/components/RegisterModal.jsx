@@ -19,9 +19,33 @@ export default function RegisterModal({ onClose, onRegisterSuccess }) {
     setError('');
     setLoading(true);
 
-    const cleanUsername = username.trim();
+    const cleanUsername = username.trim().toLowerCase();
     const cleanFullName = fullName.trim();
     const cleanEmail = email.trim();
+
+    if (!cleanUsername || !password || !cleanFullName) {
+      setError('⚠️ Vui lòng điền đầy đủ Tên tài khoản, Mật khẩu và Họ tên thành viên!');
+      setLoading(false);
+      return;
+    }
+
+    if (cleanUsername.length < 3) {
+      setError('⚠️ Tên tài khoản mong muốn phải có ít nhất 3 ký tự!');
+      setLoading(false);
+      return;
+    }
+
+    // 1. Kiểm tra xem Tên tài khoản đã tồn tại trên Supabase Cloud chưa
+    if (supabase) {
+      try {
+        const { data: existingUsers } = await supabase.from('users').select('id, username').eq('username', cleanUsername);
+        if (existingUsers && existingUsers.length > 0) {
+          setError(`⚠️ Tên tài khoản "${cleanUsername}" đã được đăng ký trước đó. Vui lòng chọn tên tài khoản khác!`);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {}
+    }
 
     const newPendingUser = {
       id: Date.now(),
@@ -34,31 +58,10 @@ export default function RegisterModal({ onClose, onRegisterSuccess }) {
       createdAt: new Date().toLocaleDateString('vi-VN')
     };
 
-    let registerOk = false;
-
-    // 1. Thử gửi đăng ký tới Backend API SQLite
-    try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: cleanUsername, password, fullName: cleanFullName, email: cleanEmail, role })
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setError(data.message || '⚠️ Tên tài khoản đã tồn tại hoặc không hợp lệ');
-        setLoading(false);
-        return;
-      }
-      if (data.id) newPendingUser.id = data.id;
-      registerOk = true;
-    } catch (err) {
-      registerOk = true; // Fallback local mode
-    }
-
-    // 2. Đồng bộ đơn đăng ký lên Supabase Cloud Postgres
+    // 2. Lưu đơn đăng ký lên Supabase Cloud Postgres
     if (supabase) {
       try {
-        await supabase.from('users').insert([{
+        const { error: insErr } = await supabase.from('users').insert([{
           username: newPendingUser.username,
           password: newPendingUser.password,
           full_name: newPendingUser.fullName,
@@ -66,17 +69,36 @@ export default function RegisterModal({ onClose, onRegisterSuccess }) {
           email: newPendingUser.email,
           status: 'PENDING'
         }]);
-      } catch (err) {}
+
+        if (insErr) {
+          if (insErr.code === '23505' || insErr.message.includes('unique')) {
+            setError(`⚠️ Tên tài khoản "${cleanUsername}" đã được đăng ký trước đó. Vui lòng chọn tên khác!`);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Lỗi đăng ký Supabase Cloud:', err);
+      }
     }
 
-    // 3. Lưu vào LocalStorage
+    // 3. Thử gửi đăng ký tới Backend API SQLite (Nếu Backend online)
+    try {
+      await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: cleanUsername, password, fullName: cleanFullName, email: cleanEmail, role })
+      });
+    } catch (err) {}
+
+    // 4. Lưu đơn đăng ký vào LocalStorage để Admin duyệt ngay tức thì
     try {
       const existingPending = JSON.parse(localStorage.getItem('portal_pending_users') || '[]');
       const updatedPending = [newPendingUser, ...existingPending.filter(u => u.username !== cleanUsername)];
       localStorage.setItem('portal_pending_users', JSON.stringify(updatedPending));
     } catch (err) {}
 
-    setMessage('✅ Đã gửi đơn đăng ký thành công! Tài khoản của bạn đã được chuyển tới Ban Giám Hiệu để phê duyệt.');
+    setMessage(`🎉 Đã gửi đơn đăng ký thành công cho tài khoản "${cleanUsername}"! Vui lòng chờ Ban Giám Hiệu phê duyệt.`);
 
     if (onRegisterSuccess) {
       onRegisterSuccess(newPendingUser);
