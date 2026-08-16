@@ -3,6 +3,7 @@ import { KeyRound, X, CheckCircle, AlertCircle, Eye, EyeOff, Lock } from 'lucide
 import { supabase } from '../lib/supabaseClient';
 
 export default function ChangePasswordModal({ user, onClose, onSuccess }) {
+  const [selectedUsername, setSelectedUsername] = useState(user?.username || 'admin');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -19,6 +20,8 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
     e.preventDefault();
     setMessage('');
     setError('');
+
+    const targetUsername = (user?.username || selectedUsername || 'admin').trim().toLowerCase();
 
     if (newPassword !== confirmPassword) {
       setError('❌ Mật khẩu mới và mật khẩu xác nhận không trùng khớp!');
@@ -42,7 +45,7 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user?.id,
-          username: user?.username,
+          username: targetUsername,
           currentPassword,
           newPassword
         })
@@ -51,17 +54,19 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
       if (res.ok && data.success) {
         isSuccess = true;
       } else {
-        errorMsg = data.message || 'Mật khẩu hiện tại không chính xác!';
+        errorMsg = data.message || '❌ Mật khẩu hiện tại không chính xác!';
       }
     } catch (err) {
       // Backend offline fallback
     }
 
     // 2. Nếu API offline, kiểm tra mật khẩu hiện tại trong local
-    if (!isSuccess && !errorMsg && user?.username) {
-      const storedPw = localStorage.getItem('user_password_' + user.username);
-      const activePassword = storedPw || 'admin123';
-      if (currentPassword === activePassword) {
+    if (!isSuccess && !errorMsg) {
+      const storedPw = localStorage.getItem('user_password_' + targetUsername);
+      const isChanged = localStorage.getItem('user_changed_password_' + targetUsername) === 'true';
+      const activePassword = storedPw || (!isChanged ? 'admin123' : null);
+      
+      if (activePassword && currentPassword === activePassword) {
         isSuccess = true;
       } else {
         errorMsg = '❌ Mật khẩu hiện tại không chính xác!';
@@ -75,22 +80,20 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
     }
 
     // 3. Đồng bộ thay đổi mật khẩu lên Supabase Cloud Postgres
-    if (supabase && user?.username) {
+    if (supabase && targetUsername) {
       try {
         await supabase
           .from('users')
           .update({ password: newPassword })
-          .eq('username', user.username);
+          .eq('username', targetUsername);
       } catch (err) {}
     }
 
     // 4. Lưu mật khẩu mới vào LocalStorage và vô hiệu hóa vĩnh viễn mật khẩu cũ
-    if (user?.username) {
-      localStorage.setItem('user_password_' + user.username, newPassword);
-      localStorage.setItem('user_changed_password_' + user.username, 'true');
-    }
+    localStorage.setItem('user_password_' + targetUsername, newPassword);
+    localStorage.setItem('user_changed_password_' + targetUsername, 'true');
 
-    setMessage('✅ Đổi mật khẩu tài khoản thành công! Lần sau đăng nhập bằng mật khẩu mới này.');
+    setMessage(`✅ Đổi mật khẩu tài khoản ${targetUsername} thành công! Mật khẩu cũ bị vô hiệu hóa 100%. Lần sau đăng nhập bằng mật khẩu mới này.`);
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
@@ -105,7 +108,7 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
       <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
         <div className="modal-header" style={{ background: '#0284c7' }}>
           <span style={{ fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <KeyRound size={18} /> ĐỔI MẬT KHẨU TÀI KHOẢN ({user?.username || 'CÁ NHÂN'})
+            <KeyRound size={18} /> ĐỔI MẬT KHẨU TÀI KHOẢN ({(user?.username || selectedUsername).toUpperCase()})
           </span>
           <button className="close-btn" onClick={onClose}><X size={20} /></button>
         </div>
@@ -124,6 +127,23 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
           )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {!user?.username && (
+              <div>
+                <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px', color: '#003a73' }}>
+                  Tài khoản cần đổi mật khẩu:
+                </label>
+                <select
+                  value={selectedUsername}
+                  onChange={(e) => setSelectedUsername(e.target.value)}
+                  style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px', fontWeight: '700' }}
+                >
+                  <option value="admin">🛡️ Quản trị viên Ban Giám Hiệu (admin)</option>
+                  <option value="giaovien">👩‍🏫 Cán bộ Giáo viên (giaovien)</option>
+                  <option value="hocsinh01">🎓 Học sinh trường (hocsinh01)</option>
+                  <option value="phuhuynh01">👨‍👩‍👧 Phụ huynh học sinh (phuhuynh01)</option>
+                </select>
+              </div>
+            )}
             <div>
               <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>
                 Mật khẩu hiện tại:
