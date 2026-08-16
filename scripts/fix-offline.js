@@ -12,10 +12,15 @@ try {
   // Remove type="module" and crossorigin attributes to allow native execution over file:// protocol in Chrome/Edge
   content = content.replaceAll('type="module" crossorigin', '');
   content = content.replaceAll('type="module"', '');
+  content = content.replaceAll('crossorigin=""', '');
   content = content.replaceAll('crossorigin', '');
 
+  // Strip any leftover ES export statements at the end of inline scripts
+  content = content.replace(/export\s*\{\s*[^}]*\};?/g, '');
+  content = content.replace(/export\s+default\s+[^;]+;?/g, '');
+
   fs.writeFileSync(distIndexPath, content, 'utf8');
-  console.log('✅ Fixed dist/index.html module attributes');
+  console.log('✅ Fixed dist/index.html module attributes and exports');
 
   if (fs.existsSync(destDir)) {
     fs.writeFileSync(destIndexPath, content, 'utf8');
