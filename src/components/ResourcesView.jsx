@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { BookOpen, Download, ExternalLink, Upload, Layers } from 'lucide-react';
+import { BookOpen, Download, ExternalLink, Upload, Layers, Edit, Trash2 } from 'lucide-react';
 
-export default function ResourcesView({ resources = [], onOpenUpload, onOpenBulkUpload }) {
+export default function ResourcesView({ resources = [], user, onOpenUpload, onOpenBulkUpload, onUpdateResource, onDeleteResource }) {
   const [filterType, setFilterType] = useState('Tất cả');
   const [search, setSearch] = useState('');
+  const [editingResource, setEditingResource] = useState(null);
 
   const resourceList = resources.length > 0 ? resources : [
     {
@@ -30,6 +31,8 @@ export default function ResourcesView({ resources = [], onOpenUpload, onOpenBulk
     }
   ];
 
+  const isAdmin = user && (user.role === 'BGH' || user.role === 'ADMIN');
+
   const filtered = resourceList.filter(item => {
     const matchesType = filterType === 'Tất cả' || item.type === filterType;
     const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase()) || item.subject.toLowerCase().includes(search.toLowerCase());
@@ -54,7 +57,7 @@ export default function ResourcesView({ resources = [], onOpenUpload, onOpenBulk
       <div className="widget-box">
         <div className="widget-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <BookOpen size={18} /> KHO TÀI NGUYÊN GIẢNG DẠY & ĐỀ THI - THCS ĐỒNG TÂN
+            <BookOpen size={18} /> KHO TÀI NGUYÊN HỌC TẬP & GIẢNG DẠY
           </span>
 
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -62,14 +65,14 @@ export default function ResourcesView({ resources = [], onOpenUpload, onOpenBulk
               style={{ background: '#16a34a', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}
               onClick={() => onOpenUpload && onOpenUpload('resources')}
             >
-              <Upload size={14} /> 📤 ĐĂNG TẢI 1 ĐỀ THI
+              <Upload size={14} /> 📤 ĐĂNG TÀI LIỆU
             </button>
 
             <button 
               style={{ background: '#0284c7', color: 'white', border: 'none', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}
-              onClick={() => onOpenBulkUpload && onOpenBulkUpload()}
+              onClick={() => onOpenBulkUpload && onOpenBulkUpload('resources')}
             >
-              <Layers size={14} /> 📦 TẢI LÊN HÀNG LOẠT (BULK UPLOAD)
+              <Layers size={14} /> 📦 TẢI LÊN HÀNG LOẠT
             </button>
           </div>
         </div>
@@ -77,8 +80,8 @@ export default function ResourcesView({ resources = [], onOpenUpload, onOpenBulk
         <div className="widget-body" style={{ padding: '20px' }}>
           
           <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {['Tất cả', 'Đề thi & Đáp án', 'Giáo án điện tử', 'Tài liệu Giảng dạy'].map(t => (
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              {['Tất cả', 'Đề thi & Đáp án', 'Giáo án điện tử', 'Tài liệu ôn thi', 'Sáng kiến kinh nghiệm'].map(t => (
                 <button
                   key={t}
                   onClick={() => setFilterType(t)}
@@ -128,7 +131,28 @@ export default function ResourcesView({ resources = [], onOpenUpload, onOpenBulk
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  {isAdmin && (
+                    <>
+                      <button 
+                        onClick={() => setEditingResource(item)}
+                        style={{ background: '#0284c7', color: 'white', border: 'none', padding: '7px 12px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <Edit size={14} /> Sửa
+                      </button>
+                      <button 
+                        onClick={() => {
+                          if (window.confirm(`Thầy/Cô có chắc muốn xóa tài liệu: "${item.title}"?`)) {
+                            onDeleteResource && onDeleteResource(item.id);
+                          }
+                        }}
+                        style={{ background: '#ef4444', color: 'white', border: 'none', padding: '7px 12px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <Trash2 size={14} /> Xóa
+                      </button>
+                    </>
+                  )}
+
                   <button 
                     style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#15803d', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', whiteSpace: 'nowrap' }}
                     onClick={() => handleDownload(item)}

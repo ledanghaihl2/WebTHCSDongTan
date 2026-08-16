@@ -148,4 +148,57 @@ router.delete('/users/:id', async (req, res) => {
   }
 });
 
+// POST /api/auth/change-password (Thành viên / Admin tự đổi mật khẩu cá nhân)
+router.post('/change-password', async (req, res) => {
+  try {
+    const { userId, username, currentPassword, newPassword } = req.body;
+    if ((!userId && !username) || !currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Vui lòng cung cấp đầy đủ mật khẩu hiện tại và mật khẩu mới' });
+    }
+
+    const user = userId 
+      ? await get('SELECT * FROM users WHERE id = ?', [userId])
+      : await get('SELECT * FROM users WHERE username = ?', [username]);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy thông tin tài khoản' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Mật khẩu hiện tại không chính xác' });
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await run('UPDATE users SET password = ? WHERE id = ?', [hashedNewPassword, user.id]);
+
+    res.json({ success: true, message: 'Đổi mật khẩu tài khoản thành công!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Lỗi server khi đổi mật khẩu', error: err.message });
+  }
+});
+
+// POST /api/auth/reset-password/:id (Admin trực tiếp đặt lại mật khẩu cho thành viên bất kỳ)
+router.post('/reset-password/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+    if (!newPassword) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập mật khẩu mới' });
+    }
+
+    const user = await get('SELECT id, username, fullName FROM users WHERE id = ?', [id]);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Tài khoản không tồn tại' });
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await run('UPDATE users SET password = ? WHERE id = ?', [hashedNewPassword, id]);
+
+    res.json({ success: true, message: `Đã đặt lại mật khẩu thành công cho tài khoản ${user.fullName} (${user.username})!` });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Lỗi server khi đặt lại mật khẩu', error: err.message });
+  }
+});
+
 export default router;

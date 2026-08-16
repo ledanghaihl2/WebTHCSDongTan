@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Upload, FilePlus, BookOpen, Newspaper, Image, Video, CheckCircle } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase, uploadFileToSupabase } from '../lib/supabaseClient';
 
 // Robust YouTube ID Extractor
 function extractYouTubeId(urlOrId) {
@@ -36,7 +36,7 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
   const [author, setAuthor] = useState('Tổ Chuyên Môn');
 
   // File Upload Handler (Base64 Embedded File Storage for Global Cross-Device Access)
-  const handleFileUpload = (file) => {
+  const handleFileUpload = async (file) => {
     if (!file) return;
     setUploading(true);
     setFileName(file.name);
@@ -47,6 +47,20 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
       return;
     }
 
+    try {
+      // 1. Thử tải trực tiếp lên Supabase Storage
+      const uploadedUrl = await uploadFileToSupabase(file, activeType || 'uploads');
+      if (uploadedUrl && !uploadedUrl.startsWith('data:')) {
+        setFileUrl(uploadedUrl);
+        setMessage(`✅ Đã tải tệp lên đám mây Supabase: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+        setUploading(false);
+        return;
+      }
+    } catch (err) {
+      console.warn('Supabase storage upload fallback to local reader:', err);
+    }
+
+    // 2. Fallback sang FileReader mã hóa Base64
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataUrl = e.target.result;
@@ -68,6 +82,25 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
 
     const newItemId = Date.now();
     let newItem = null;
+
+    // Helper giữ nguyên 100% đường link ảnh gốc do người dùng tải lên (Data URL / HTTP URL)
+    const getSafeDbImageUrl = (url, fallback = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80') => {
+      if (!url || url === '#' || url === 'file_attached') {
+        return (externalLink && externalLink.startsWith('http')) ? externalLink : fallback;
+      }
+      if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:image')) {
+        return url;
+      }
+      return (externalLink && externalLink.startsWith('http')) ? externalLink : fallback;
+    };
+
+    const getSafeDbFileUrl = (url) => {
+      if (!url || url === '#') return externalLink || fileName || 'file_attached';
+      if (url.startsWith('http') || url.startsWith('/') || url.startsWith('data:')) {
+        return url;
+      }
+      return externalLink || fileName || 'file_attached';
+    };
 
     if (activeType === 'docs') {
       newItem = {
@@ -92,11 +125,13 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
             category: newItem.category,
             issue_date: newItem.issueDate,
             signer: newItem.signer,
-            file_url: newItem.fileUrl,
+            file_url: getSafeDbFileUrl(newItem.fileUrl),
             file_name: newItem.fileName,
             external_link: newItem.externalLink
           }]);
-        } catch (err) {}
+        } catch (err) {
+          console.error('Lỗi lưu văn bản Supabase:', err);
+        }
       }
 
     } else if (activeType === 'resources') {
@@ -121,15 +156,20 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
             subject: newItem.subject,
             author: newItem.author,
             date: newItem.date,
-            file_url: newItem.fileUrl,
+            file_url: getSafeDbFileUrl(newItem.fileUrl),
             file_name: newItem.fileName,
             external_link: newItem.externalLink
           }]);
-        } catch (err) {}
+        } catch (err) {
+          console.error('Lỗi lưu tài nguyên Supabase:', err);
+        }
       }
 
     } else if (activeType === 'news') {
       const catObj = categories.find(c => c.id === parseInt(category)) || { name: 'Tin tức - Sự kiện' };
+      const defaultNewsImg = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&q=80';
+      const actualImg = fileUrl || externalLink || defaultNewsImg;
+
       newItem = {
         id: newItemId,
         title: title || 'Tin tức mới cập nhật',
@@ -138,12 +178,12 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
         categoryName: catObj.name,
         summary: summary || title,
         content: content || summary || title,
-        image: fileUrl || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=800&q=80',
+        image: actualImg,
         author: 'Ban Biên Tập THCS Đồng Tân',
         isFeatured: 0,
         views: 1,
         createdAt: '2026-08-08 08:00:00',
-        fileUrl: fileUrl || '',
+        fileUrl: actualImg,
         fileName: fileName || '',
         externalLink: externalLink || ''
       };
@@ -157,23 +197,28 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
             category_name: newItem.categoryName,
             summary: newItem.summary,
             content: newItem.content,
-            image: newItem.image,
-            file_url: newItem.fileUrl,
+            image: getSafeDbImageUrl(newItem.image, defaultNewsImg),
+            file_url: getSafeDbFileUrl(newItem.fileUrl),
             external_link: newItem.externalLink,
             author: newItem.author
           }]);
-        } catch (err) {}
+        } catch (err) {
+          console.error('Lỗi lưu bài viết Supabase:', err);
+        }
       }
 
     } else if (activeType === 'albums') {
+      const defaultAlbumCover = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80';
+      const actualCover = fileUrl || externalLink || defaultAlbumCover;
+
       newItem = {
         id: newItemId,
         title: title || 'Album ảnh hoạt động mới',
         date: '08/08/2026',
-        photosCount: 10,
-        cover: fileUrl || 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80',
+        photosCount: 1,
+        cover: actualCover,
         description: summary || title,
-        fileUrl: fileUrl || '',
+        fileUrl: actualCover,
         externalLink: externalLink || ''
       };
 
@@ -182,12 +227,15 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
           await supabase.from('albums').insert([{
             title: newItem.title,
             date: newItem.date,
-            cover: newItem.cover,
+            photos_count: newItem.photosCount,
+            cover: getSafeDbImageUrl(newItem.cover, defaultAlbumCover),
             description: newItem.description,
-            file_url: newItem.fileUrl,
+            file_url: getSafeDbFileUrl(newItem.fileUrl),
             external_link: newItem.externalLink
           }]);
-        } catch (err) {}
+        } catch (err) {
+          console.error('Lỗi lưu album Supabase:', err);
+        }
       }
 
     } else if (activeType === 'videos') {
@@ -209,11 +257,13 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
           await supabase.from('videos').insert([{
             title: newItem.title,
             youtube_id: newItem.youtubeId,
-            video_url: newItem.videoUrl,
+            video_url: getSafeDbUrl(newItem.videoUrl),
             thumbnail_url: newItem.thumbnailUrl,
             external_link: newItem.externalLink
           }]);
-        } catch (err) {}
+        } catch (err) {
+          console.error('Lỗi lưu video Supabase:', err);
+        }
       }
     }
 
@@ -222,7 +272,7 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
     }
 
     setUploading(false);
-    setMessage('✅ Đã lưu lên Supabase Cloud và hiển thị công khai trên tất cả các thiết bị!');
+    setMessage('✅ ĐÃ LƯU VÀ TẢI LÊN THÀNH CÔNG VÀ HIỂN THỊ CÔNG KHAI!');
     setTimeout(() => {
       onClose();
     }, 800);

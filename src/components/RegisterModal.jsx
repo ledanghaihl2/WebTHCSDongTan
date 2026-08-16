@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { UserPlus, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { UserPlus, X, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 export default function RegisterModal({ onClose, onRegisterSuccess }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('HOC_SINH');
@@ -18,17 +19,43 @@ export default function RegisterModal({ onClose, onRegisterSuccess }) {
     setError('');
     setLoading(true);
 
+    const cleanUsername = username.trim();
+    const cleanFullName = fullName.trim();
+    const cleanEmail = email.trim();
+
     const newPendingUser = {
       id: Date.now(),
-      username: username.trim(),
+      username: cleanUsername,
       password,
-      fullName: fullName.trim(),
-      email: email.trim(),
+      fullName: cleanFullName,
+      email: cleanEmail,
       role,
       status: 'PENDING',
       createdAt: new Date().toLocaleDateString('vi-VN')
     };
 
+    let registerOk = false;
+
+    // 1. Thử gửi đăng ký tới Backend API SQLite
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: cleanUsername, password, fullName: cleanFullName, email: cleanEmail, role })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data.message || '⚠️ Tên tài khoản đã tồn tại hoặc không hợp lệ');
+        setLoading(false);
+        return;
+      }
+      if (data.id) newPendingUser.id = data.id;
+      registerOk = true;
+    } catch (err) {
+      registerOk = true; // Fallback local mode
+    }
+
+    // 2. Đồng bộ đơn đăng ký lên Supabase Cloud Postgres
     if (supabase) {
       try {
         await supabase.from('users').insert([{
@@ -42,15 +69,14 @@ export default function RegisterModal({ onClose, onRegisterSuccess }) {
       } catch (err) {}
     }
 
+    // 3. Lưu vào LocalStorage
     try {
-      await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, fullName, email, role })
-      });
+      const existingPending = JSON.parse(localStorage.getItem('portal_pending_users') || '[]');
+      const updatedPending = [newPendingUser, ...existingPending.filter(u => u.username !== cleanUsername)];
+      localStorage.setItem('portal_pending_users', JSON.stringify(updatedPending));
     } catch (err) {}
 
-    setMessage('✅ Đã gửi yêu cầu đăng ký tài khoản thành công! Đơn của bạn đã xuất hiện trên Supabase Cloud để Ban Giám Hiệu phê duyệt.');
+    setMessage('✅ Đã gửi đơn đăng ký thành công! Tài khoản của bạn đã được chuyển tới Ban Giám Hiệu để phê duyệt.');
 
     if (onRegisterSuccess) {
       onRegisterSuccess(newPendingUser);
@@ -105,7 +131,35 @@ export default function RegisterModal({ onClose, onRegisterSuccess }) {
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Mật khẩu:</label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} placeholder="Mật khẩu..." />
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    required 
+                    style={{ width: '100%', padding: '8px 36px 8px 8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} 
+                    placeholder="Mật khẩu..." 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#64748b',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                    title={showPassword ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
             </div>
 
