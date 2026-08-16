@@ -24,7 +24,7 @@ export default function AdminPortal({
   onRefreshData 
 }) {
   const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState(() => localStorage.getItem('user_password_admin') || 'admin123');
+  const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [adminTab, setAdminTab] = useState('users');

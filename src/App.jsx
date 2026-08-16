@@ -192,9 +192,9 @@ export default function App() {
 
 
 
-  // Admin Auth State
-  const [token, setToken] = useState(localStorage.getItem('adminToken') || '');
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('adminUser') || 'null'));
+  // Admin Auth State - BGH và Admin bắt buộc phải gõ tài khoản & mật khẩu để đăng nhập
+  const [token, setToken] = useState('');
+  const [user, setUser] = useState(null);
 
   // Sync states to LocalStorage
   useEffect(() => {
