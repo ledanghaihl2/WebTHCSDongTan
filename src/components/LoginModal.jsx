@@ -160,42 +160,36 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
               <button
                 type="button"
                 onClick={() => {
-                  const uname = 'phuhuynh01';
-                  const pw = localStorage.getItem('user_password_' + uname) || 'admin123';
-                  setUsername(uname);
-                  setPassword(pw);
+                  setUsername('phuhuynh01');
+                  setPassword('');
                   setError('');
                 }}
                 style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#b45309', padding: '6px 4px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', textAlign: 'center' }}
-                title="Bấm để nạp sẵn tài khoản Phụ Huynh An 9A1"
+                title="Bấm để nạp sẵn tên tài khoản Phụ Huynh An 9A1"
               >
                 👨‍👩‍👧 Phụ Huynh
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  const uname = 'giaovien';
-                  const pw = localStorage.getItem('user_password_' + uname) || 'admin123';
-                  setUsername(uname);
-                  setPassword(pw);
+                  setUsername('giaovien');
+                  setPassword('');
                   setError('');
                 }}
                 style={{ background: '#f3e8ff', border: '1px solid #ddd6fe', color: '#6b21a8', padding: '6px 4px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', textAlign: 'center' }}
-                title="Bấm để nạp sẵn tài khoản Giáo Viên Hoa"
+                title="Bấm để nạp sẵn tên tài khoản Giáo Viên Hoa"
               >
                 👩‍🏫 Giáo Viên
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  const uname = 'admin';
-                  const pw = localStorage.getItem('user_password_' + uname) || 'admin123';
-                  setUsername(uname);
-                  setPassword(pw);
+                  setUsername('admin');
+                  setPassword('');
                   setError('');
                 }}
                 style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#991b1b', padding: '6px 4px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', textAlign: 'center' }}
-                title="Bấm để nạp sẵn tài khoản Ban Giám Hiệu"
+                title="Bấm để nạp sẵn tên tài khoản Ban Giám Hiệu"
               >
                 🛡️ BGH Admin
               </button>

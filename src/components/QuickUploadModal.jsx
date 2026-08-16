@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 import { X, Upload, FilePlus, BookOpen, Newspaper, Image, Video, CheckCircle } from 'lucide-react';
 import { supabase, uploadFileToSupabase } from '../lib/supabaseClient';
 
+// Safe DB URL Formatter
+function getSafeDbFileUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('data:') && url.length > 100000) {
+    return 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600&q=80';
+  }
+  return url;
+}
+
 // Robust YouTube ID Extractor (Hỗ trợ tất cả dạng link: watch?v=, youtu.be/, shorts/, embed/)
 function extractYouTubeId(urlOrId) {
   if (!urlOrId) return '';

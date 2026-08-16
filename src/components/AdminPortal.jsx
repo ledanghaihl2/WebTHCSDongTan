@@ -282,8 +282,9 @@ export default function AdminPortal({
       return;
     }
 
-    // 3. Fallback mật khẩu mặc định admin123
-    if (password === 'admin123' && (cleanUsername === 'admin' || cleanUsername === 'giaovien')) {
+    // 3. Fallback mật khẩu mặc định admin123 (CHỈ CHẤP NHẬN NẾU CHƯA TỪNG ĐỔI MẬT KHẨU)
+    const isChanged = localStorage.getItem('user_changed_password_' + cleanUsername) === 'true';
+    if (!storedPw && !isChanged && password === 'admin123' && (cleanUsername === 'admin' || cleanUsername === 'giaovien')) {
       const dummyUser = cleanUsername === 'admin'
         ? { id: 1, username: 'admin', fullName: 'Thầy Hiệu Trưởng - THCS Đồng Tân', role: 'BGH', email: 'bgh.thcsdongtan@langson.edu.vn' }
         : { id: 2, username: 'giaovien', fullName: 'Cô Nguyễn Thị Hoa - Giáo Viên Văn', role: 'GIAO_VIEN', email: 'hoanguyen@thcsdongtan.edu.vn' };
