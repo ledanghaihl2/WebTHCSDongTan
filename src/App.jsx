@@ -11,7 +11,9 @@ import QuickUploadModal from './components/QuickUploadModal';
 import BulkUploadModal from './components/BulkUploadModal';
 import RegisterModal from './components/RegisterModal';
 import ChangePasswordModal from './components/ChangePasswordModal';
+import LoginModal from './components/LoginModal';
 import AdminPortal from './components/AdminPortal';
+
 
 import IntroView from './components/IntroView';
 import AlbumsView from './components/AlbumsView';
@@ -180,12 +182,14 @@ export default function App() {
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
   const [activeDocument, setActiveDocument] = useState(null);
 
-  // Quick Upload, Bulk Upload & Register Modal States
+  // Quick Upload, Bulk Upload, Register & Login Modal States
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [uploadDefaultTab, setUploadDefaultTab] = useState('docs');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
 
 
   // Admin Auth State
@@ -563,10 +567,12 @@ export default function App() {
         onOpenAdmin={() => setActiveTab('admin')} 
         onOpenUpload={() => handleOpenUpload('docs')}
         onOpenBulkUpload={handleOpenBulkUpload}
+        onOpenLogin={() => setShowLoginModal(true)}
         onOpenRegister={() => setShowRegisterModal(true)}
         onOpenChangePassword={() => setShowChangePasswordModal(true)}
         onLogout={handleLogout}
       />
+
 
 
       <SubBar announcements={announcements} onSearch={handleSearch} />
@@ -734,6 +740,21 @@ export default function App() {
         />
       )}
 
+      {/* Member Login Modal */}
+      {showLoginModal && (
+        <LoginModal 
+          onClose={() => setShowLoginModal(false)}
+          onLoginSuccess={(newToken, newUser) => {
+            handleLoginSuccess(newToken, newUser);
+            setShowLoginModal(false);
+          }}
+          onOpenRegister={() => {
+            setShowLoginModal(false);
+            setShowRegisterModal(true);
+          }}
+        />
+      )}
+
       {/* Change Password Modal */}
       {showChangePasswordModal && (
         <ChangePasswordModal 
@@ -742,6 +763,7 @@ export default function App() {
           onSuccess={() => setShowChangePasswordModal(false)}
         />
       )}
+
 
       <Footer siteConfig={siteConfig} />
     </div>
