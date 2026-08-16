@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, LogOut, PlusCircle, FilePlus, Users, CheckCircle, Trash2, Edit, Settings, AlertCircle, Save, Check, UserCheck, Bell, UserPlus } from 'lucide-react';
+import { ShieldCheck, LogOut, PlusCircle, FilePlus, Users, CheckCircle, Trash2, Edit, Settings, AlertCircle, Save, Check, UserCheck, Bell, UserPlus, Eye, EyeOff, Lock } from 'lucide-react';
 
 export default function AdminPortal({ 
   token, 
@@ -26,6 +26,7 @@ export default function AdminPortal({
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState(() => localStorage.getItem('user_password_admin') || 'admin123');
   const [loginError, setLoginError] = useState('');
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [adminTab, setAdminTab] = useState('users');
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -382,15 +383,54 @@ export default function AdminPortal({
             />
           </div>
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '5px' }}>Mật khẩu:</label>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              style={{ width: '100%', padding: '8px 10px', border: '1px solid #94a3b8', borderRadius: '4px' }}
-              placeholder={localStorage.getItem('user_changed_password_' + username) === 'true' ? "Nhập mật khẩu mới..." : "Mật khẩu mặc định: admin123"}
-              required 
-            />
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '6px', color: '#1e293b' }}>Mật khẩu quản trị:</label>
+            <div style={{ position: 'relative' }}>
+              <input 
+                type={showAdminPassword ? 'text' : 'password'} 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                style={{ width: '100%', padding: '9px 40px 9px 10px', border: '1px solid #94a3b8', borderRadius: '4px', boxSizing: 'border-box' }}
+                placeholder={localStorage.getItem('user_changed_password_' + username) === 'true' ? "Nhập mật khẩu mới..." : "Mật khẩu mặc định: admin123"}
+                required 
+              />
+              <button
+                type="button"
+                onClick={() => setShowAdminPassword(!showAdminPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#64748b',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+                title={showAdminPassword ? "Ẩn mật khẩu" : "Hiển thị mật khẩu chữ rõ ràng"}
+              >
+                {showAdminPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            
+            {/* Nút bật tắt chế độ hiển thị mật khẩu bằng chữ */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+              <button
+                type="button"
+                onClick={() => setShowAdminPassword(!showAdminPassword)}
+                style={{ background: 'none', border: 'none', color: '#0056a6', fontSize: '12px', cursor: 'pointer', fontWeight: '700', padding: 0 }}
+              >
+                {showAdminPassword ? '🙈 Ẩn mật khẩu (dạng dấu châm)' : '👁️ Hiển thị mật khẩu chữ rõ ràng'}
+              </button>
+              <span style={{ fontSize: '11.5px', color: '#64748b' }}>
+                {localStorage.getItem('user_changed_password_' + username) === 'true'
+                  ? <span style={{ color: '#16a34a', fontWeight: '700' }}>✓ Đã đổi mật khẩu mới</span>
+                  : <>Mật khẩu thử: <strong>admin123</strong></>
+                }
+              </span>
+            </div>
           </div>
           <button type="submit" style={{ width: '100%', background: '#0056a6', color: 'white', border: 'none', padding: '10px', borderRadius: '4px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>
             Đăng Nhập Quản Trị
