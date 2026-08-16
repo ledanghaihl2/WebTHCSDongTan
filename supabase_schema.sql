@@ -93,9 +93,10 @@ CREATE TABLE public.videos (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     category VARCHAR(100) DEFAULT 'Hoạt động trường',
-    youtube_id VARCHAR(100),
+    youtube_id VARCHAR(255),
     video_url TEXT,
     thumbnail_url TEXT,
+    external_link TEXT,
     duration VARCHAR(50) DEFAULT '05:30',
     views INT DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
