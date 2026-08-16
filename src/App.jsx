@@ -490,7 +490,10 @@ export default function App() {
     setShowUploadModal(true);
   };
 
-  const handleOpenBulkUpload = () => {
+  const [bulkDefaultTab, setBulkDefaultTab] = useState('albums');
+
+  const handleOpenBulkUpload = (type = 'albums') => {
+    setBulkDefaultTab(type || 'albums');
     setShowBulkUploadModal(true);
   };
 
@@ -823,15 +826,19 @@ export default function App() {
       {/* NEW Bulk Upload Popup Modal */}
       {showBulkUploadModal && (
         <BulkUploadModal 
+          initialBulkType={bulkDefaultTab}
           onClose={() => setShowBulkUploadModal(false)}
           onBulkUploadSuccess={(bType, newItems) => {
             if (newItems && newItems.length > 0) {
               if (bType === 'albums') {
                 setAlbums(prev => [...newItems, ...prev]);
+                setActiveTab('albums');
               } else if (bType === 'docs') {
                 setDocuments(prev => [...newItems, ...prev]);
+                setActiveTab('documents');
               } else if (bType === 'resources') {
                 setResources(prev => [...newItems, ...prev]);
+                setActiveTab('resources');
               }
             }
           }}

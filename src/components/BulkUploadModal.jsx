@@ -2,8 +2,8 @@ import React, { useState, useRef } from 'react';
 import { X, UploadCloud, Layers, CheckCircle, FileText, BookOpen, Image, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase, uploadFileToSupabase } from '../lib/supabaseClient';
 
-export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
-  const [bulkType, setBulkType] = useState('resources'); // 'resources', 'docs', 'albums'
+export default function BulkUploadModal({ onClose, onBulkUploadSuccess, initialBulkType = 'albums' }) {
+  const [bulkType, setBulkType] = useState(initialBulkType); // 'resources', 'docs', 'albums'
   const [fileList, setFileList] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -23,7 +23,15 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
     setMessage('');
     setError('');
 
-    const newItems = Array.from(files).map((file, idx) => ({
+    const fileArray = Array.from(files);
+    
+    // Tự động phát hiện nếu người dùng chọn hàng loạt ảnh -> Chuyển ngay tab sang 'albums'
+    const imageCount = fileArray.filter(f => (f.type && f.type.startsWith('image/')) || /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(f.name)).length;
+    if (imageCount > 0 && imageCount >= Math.ceil(fileArray.length / 2)) {
+      setBulkType('albums');
+    }
+
+    const newItems = fileArray.map((file, idx) => ({
       id: Date.now() + idx,
       file,
       name: file.name,
@@ -49,6 +57,60 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
     setMessage('🛑 ĐÃ DỪNG TẢI LÊN! Đang hoàn tất lưu danh sách...');
   };
 
+  // Nén ảnh thông minh bằng Canvas giúp ảnh siêu nhẹ (~40KB) không bao giờ bị tràn bộ nhớ LocalStorage hay lỗi
+  const compressImageFile = (file) => {
+    return new Promise((resolve) => {
+      if (!file) {
+        resolve('');
+        return;
+      }
+      const isImg = (file.type && file.type.startsWith('image/')) || /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(file.name);
+      if (!isImg) {
+        resolve('');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = document.createElement('img');
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 600;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height = Math.round((height * MAX_WIDTH) / width);
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width = Math.round((width * MAX_HEIGHT) / height);
+                height = MAX_HEIGHT;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            resolve(compressedDataUrl);
+          } catch (err) {
+            resolve(e.target.result || '');
+          }
+        };
+        img.onerror = () => resolve(e.target.result || '');
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleStartBulkUpload = async () => {
     if (fileList.length === 0) {
       setError('Vui lòng chọn ít nhất 1 tệp tin để bắt đầu tải lên hàng loạt!');
@@ -58,7 +120,7 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
     stopRequestedRef.current = false;
     setUploading(true);
     setError('');
-    setMessage('🚀 Đang tải lên hàng loạt các tệp tin...');
+    setMessage('🚀 Đang xử lý và nén ảnh tải lên hàng loạt...');
     setProgress(5);
 
     const total = fileList.length;
@@ -73,21 +135,8 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
       const item = fileList[i];
       setFileList(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'uploading' } : f));
 
-      // Kiểm tra tệp tin ảnh dựa theo MIME type hoặc phần mở rộng tệp (.png, .jpg, .jpeg, .webp, .gif)
-      const isImg = (item.file && item.file.type && item.file.type.startsWith('image/')) || 
-                    (item.file && item.file.name && /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(item.file.name));
-
-      let filePreviewUrl = '';
-      if (isImg && item.file) {
-        try {
-          filePreviewUrl = await new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result || '');
-            reader.onerror = () => resolve('');
-            reader.readAsDataURL(item.file);
-          });
-        } catch (e) {}
-      }
+      // Nén ảnh chuẩn 800px siêu nhẹ vĩnh viễn
+      const filePreviewUrl = await compressImageFile(item.file);
 
       const defaultAlbumCover = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&q=80';
       const safeDbImageUrl = (filePreviewUrl && filePreviewUrl.length > 5) ? filePreviewUrl : defaultAlbumCover;
