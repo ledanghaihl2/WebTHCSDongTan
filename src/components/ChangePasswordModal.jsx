@@ -84,9 +84,10 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
       } catch (err) {}
     }
 
-    // 4. Lưu mật khẩu mới vào LocalStorage để đăng nhập luôn dùng mật khẩu mới
+    // 4. Lưu mật khẩu mới vào LocalStorage và vô hiệu hóa vĩnh viễn mật khẩu cũ
     if (user?.username) {
       localStorage.setItem('user_password_' + user.username, newPassword);
+      localStorage.setItem('user_changed_password_' + user.username, 'true');
     }
 
     setMessage('✅ Đổi mật khẩu tài khoản thành công! Lần sau đăng nhập bằng mật khẩu mới này.');

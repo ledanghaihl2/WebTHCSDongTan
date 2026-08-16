@@ -43,12 +43,17 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
         }
         authenticatedUser = data.user;
         token = data.token || token;
+      } else if (!res.ok) {
+        // Máy chủ Backend đang chạy và từ chối do gõ sai/dùng mật khẩu cũ -> DỪNG NGAY KHÔNG CHO FALLBACK MẬT KHẨU CŨ
+        setError(data.message || '❌ Tên đăng nhập hoặc mật khẩu không chính xác!');
+        setLoading(false);
+        return;
       }
     } catch (err) {
-      // Backend offline fallback
+      // Backend offline fallback (Chỉ chạy khi không kết nối được máy chủ)
     }
 
-    // 2. Thử đăng nhập qua Supabase Cloud Postgres nếu backend chưa trả về kết quả
+    // 2. Thử đăng nhập qua Supabase Cloud Postgres nếu backend offline
     if (!authenticatedUser && supabase) {
       try {
         const { data: users, error: dbError } = await supabase
@@ -59,15 +64,15 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
         if (users && users.length > 0) {
           const u = users[0];
           const storedPw = localStorage.getItem('user_password_' + cleanUsername);
-          const activePassword = storedPw || u.password;
+          const isChanged = localStorage.getItem('user_changed_password_' + cleanUsername) === 'true';
 
           let isPwValid = false;
-          if (activePassword && activePassword !== '$2a$10$84J.N1i1JvCjJmI/K2D/Me1M.Kx7XG1t3VnS3bK7V9tL.u8.k1u.') {
-            // Mật khẩu đã đổi -> BẮT BUỘC gõ đúng mật khẩu mới (Mật khẩu cũ bị vô hiệu hóa)
-            isPwValid = (cleanPassword === activePassword);
+          if (storedPw || isChanged) {
+            // Đã đổi mật khẩu -> BẮT BUỘC gõ đúng mật khẩu mới (Mật khẩu cũ bị vô hiệu hóa 100%)
+            isPwValid = (cleanPassword === storedPw);
           } else {
-            // Chưa đổi -> Dùng mật khẩu mặc định
-            isPwValid = (cleanPassword === 'admin123');
+            // Chưa đổi -> Kiểm tra mật khẩu trong Supabase hoặc mặc định admin123
+            isPwValid = (cleanPassword === u.password || cleanPassword === 'admin123');
           }
 
           if (isPwValid) {
@@ -92,20 +97,23 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
               email: u.email,
               status: 'ACTIVE'
             };
+          } else {
+            setError('❌ Mật khẩu không chính xác! Nếu bạn đã đổi mật khẩu, vui lòng nhập mật khẩu mới.');
+            setLoading(false);
+            return;
           }
         }
       } catch (err) {}
     }
 
-    // 3. Fallback tài khoản mặc định và tài khoản chờ duyệt trong LocalStorage
+    // 3. Fallback tài khoản mặc định và tài khoản trong LocalStorage (Khi Offline)
     if (!authenticatedUser) {
-      // Kiểm tra trong danh sách tài khoản chờ duyệt của LocalStorage
       try {
         const pendingList = JSON.parse(localStorage.getItem('portal_pending_users') || '[]');
         const pendingMatch = pendingList.find(u => u.username === cleanUsername);
         if (pendingMatch) {
           if (pendingMatch.status === 'PENDING') {
-            setError('⏳ Tài khoản của bạn vừa đăng ký thành công và ĐANG CHỜ BAN GIÁM HIỆU DỤYỆT!');
+            setError('⏳ Tài khoản của bạn vừa đăng ký thành công và ĐANG CHỜ BAN GIÁM HIỆU DUYỆT!');
             setLoading(false);
             return;
           }
@@ -113,14 +121,21 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
       } catch (err) {}
 
       const storedPw = localStorage.getItem('user_password_' + cleanUsername);
+      const isChanged = localStorage.getItem('user_changed_password_' + cleanUsername) === 'true';
       
       let isMatched = false;
-      if (storedPw) {
-        // Đã đổi mật khẩu -> CHỈ chấp nhận mật khẩu mới! Mật khẩu cũ bị loại bỏ hoàn toàn
+      if (storedPw || isChanged) {
+        // Đã đổi mật khẩu -> CHỈ chấp nhận mật khẩu mới! Mật khẩu cũ bị vô hiệu hóa hoàn toàn
         isMatched = (cleanPassword === storedPw);
       } else {
         // Chưa đổi -> Chấp nhận mật khẩu mặc định admin123
         isMatched = (cleanPassword === 'admin123');
+      }
+
+      if (!isMatched) {
+        setError('❌ Mật khẩu không chính xác! Vui lòng kiểm tra lại hoặc nhập mật khẩu mới nếu đã thay đổi.');
+        setLoading(false);
+        return;
       }
 
       if (isMatched) {

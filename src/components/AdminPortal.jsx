@@ -239,18 +239,31 @@ export default function AdminPortal({
             onLogin(data.token, data.user);
             return;
           } else {
-            setLoginError(data.message || 'Tài khoản hoặc mật khẩu không chính xác');
+            setLoginError(data.message || '❌ Tên đăng nhập hoặc mật khẩu không chính xác');
             return;
           }
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setLoginError(data.message || '❌ Tên đăng nhập hoặc mật khẩu không chính xác!');
+          return;
         }
       } catch (err) {}
     }
 
-    // Offline LocalStorage password check
+    // Offline LocalStorage password check (Chỉ chạy khi máy chủ không phản hồi)
     const storedPw = localStorage.getItem('user_password_' + username);
-    const activePassword = storedPw || 'admin123';
+    const isChanged = localStorage.getItem('user_changed_password_' + username) === 'true';
 
-    if (password === activePassword && (username === 'admin' || username === 'giaovien' || storedPw)) {
+    let isMatched = false;
+    if (storedPw || isChanged) {
+      // Đã đổi mật khẩu -> BẮT BUỘC gõ đúng mật khẩu mới! Mật khẩu cũ bị vô hiệu hóa 100%
+      isMatched = (password === storedPw);
+    } else {
+      // Chưa từng đổi -> Mật khẩu mặc định là admin123
+      isMatched = (password === 'admin123');
+    }
+
+    if (isMatched && (username === 'admin' || username === 'giaovien' || storedPw)) {
       const dummyUser = username === 'admin'
         ? { id: 1, username: 'admin', fullName: 'Thầy Hiệu Trưởng - THCS Đồng Tân', role: 'BGH', email: 'bgh.thcsdongtan@langson.edu.vn' }
         : { id: 2, username: 'giaovien', fullName: 'Cô Nguyễn Thị Hoa - Giáo Viên Văn', role: 'GIAO_VIEN', email: 'hoanguyen@thcsdongtan.edu.vn' };
@@ -258,7 +271,7 @@ export default function AdminPortal({
       return;
     }
 
-    setLoginError('Tài khoản hoặc mật khẩu không chính xác!');
+    setLoginError('❌ Mật khẩu không chính xác! Vui lòng nhập mật khẩu mới nếu đã thay đổi.');
   };
 
   const handleCreateNews = async (e) => {
