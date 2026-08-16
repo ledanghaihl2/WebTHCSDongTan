@@ -80,11 +80,16 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
       let filePreviewUrl = '';
       if (isImg && item.file) {
         try {
-          filePreviewUrl = URL.createObjectURL(item.file);
+          filePreviewUrl = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result || '');
+            reader.onerror = () => resolve('');
+            reader.readAsDataURL(item.file);
+          });
         } catch (e) {}
       }
 
-      const defaultAlbumCover = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80';
+      const defaultAlbumCover = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&q=80';
       const safeDbImageUrl = (filePreviewUrl && filePreviewUrl.length > 5) ? filePreviewUrl : defaultAlbumCover;
       const safeDbFileUrl = item.name;
 

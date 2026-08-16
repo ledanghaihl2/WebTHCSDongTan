@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Image, Eye, Calendar, Sparkles, Edit, Trash2 } from 'lucide-react';
 
-const DEFAULT_ALBUM_COVER = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80';
+const DEFAULT_ALBUM_COVER = 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&q=80';
 
 const getValidImageSrc = (src) => {
   if (!src || src === '#' || src === 'file_attached') {
@@ -173,7 +173,26 @@ export default function AlbumsView({ albums = [], user, onUpdateAlbum, onDeleteA
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Đường dẫn ảnh bìa (Cover URL):</label>
-                  <input type="text" value={editingAlbum.cover} onChange={(e) => setEditingAlbum({ ...editingAlbum, cover: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                  <input type="text" value={editingAlbum.cover} onChange={(e) => setEditingAlbum({ ...editingAlbum, cover: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '6px' }} />
+                  
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#0056a6', marginBottom: '4px', cursor: 'pointer' }}>
+                    📸 Hoặc chọn ảnh trực tiếp từ máy tính của Thầy/Cô:
+                  </label>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => {
+                      const file = e.target.files && e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          setEditingAlbum({ ...editingAlbum, cover: ev.target.result });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Mô tả Album:</label>
