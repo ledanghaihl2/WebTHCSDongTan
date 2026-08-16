@@ -702,7 +702,7 @@ export default function App() {
       ) : activeTab === 'albums' ? (
         <AlbumsView albums={albums} user={user} onUpdateAlbum={handleUpdateAlbum} onDeleteAlbum={handleDeleteAlbum} />
       ) : activeTab === 'videos' ? (
-        <VideosView videos={videos} user={user} onOpenUpload={handleOpenUpload} onUpdateVideo={handleUpdateVideo} onDeleteVideo={handleDeleteVideo} />
+        <VideosView videos={videos} user={user} onOpenUpload={handleOpenUpload} onAddNewItem={handleAddNewItem} onUpdateVideo={handleUpdateVideo} onDeleteVideo={handleDeleteVideo} />
       ) : activeTab === 'resources' ? (
         <ResourcesView resources={resources} user={user} onOpenUpload={handleOpenUpload} onOpenBulkUpload={handleOpenBulkUpload} onUpdateResource={handleUpdateResource} onDeleteResource={handleDeleteResource} />
       ) : activeTab === 'schedule' ? (

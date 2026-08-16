@@ -13,8 +13,14 @@ function extractYouTubeId(urlOrId) {
   return (match && match[1]) ? match[1] : '';
 }
 
-export default function VideosView({ videos = [], user, onOpenUpload, onUpdateVideo, onDeleteVideo }) {
+export default function VideosView({ videos = [], user, onOpenUpload, onAddNewItem, onUpdateVideo, onDeleteVideo }) {
   const [editingVideo, setEditingVideo] = useState(null);
+  const [showAddVideoModal, setShowAddVideoModal] = useState(false);
+  const [newVideoTitle, setNewVideoTitle] = useState('');
+  const [newVideoLink, setNewVideoLink] = useState('');
+  const [newVideoFileUrl, setNewVideoFileUrl] = useState('');
+  const [newVideoFileName, setNewVideoFileName] = useState('');
+
   const isAdmin = user && (user.role === 'BGH' || user.role === 'ADMIN');
   const videoList = videos.length > 0 ? videos : [
     {
@@ -47,6 +53,41 @@ export default function VideosView({ videos = [], user, onOpenUpload, onUpdateVi
     setIframeError(false);
   };
 
+  const handleCreateVideoSubmit = (e) => {
+    e.preventDefault();
+    const newItemId = Date.now();
+    const inputStr = newVideoLink || newVideoFileUrl || '';
+    const extractedYtId = extractYouTubeId(inputStr);
+    const isLocalVideoFile = newVideoFileUrl.startsWith('data:video') || newVideoFileUrl.endsWith('.mp4') || newVideoFileUrl.endsWith('.webm') || newVideoFileUrl.startsWith('blob:');
+
+    const finalVideoUrl = isLocalVideoFile ? newVideoFileUrl : (newVideoLink || newVideoFileUrl || (extractedYtId ? `https://www.youtube.com/watch?v=${extractedYtId}` : ''));
+    const finalThumb = extractedYtId 
+      ? `https://img.youtube.com/vi/${extractedYtId}/hqdefault.jpg` 
+      : 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600&q=80';
+
+    const newVidObj = {
+      id: newItemId,
+      title: newVideoTitle || 'Video hoạt động THCS Đồng Tân',
+      youtubeId: extractedYtId,
+      videoUrl: finalVideoUrl,
+      thumbnailUrl: finalThumb,
+      views: 1,
+      externalLink: newVideoLink
+    };
+
+    if (onAddNewItem) {
+      onAddNewItem('videos', newVidObj);
+    } else if (onOpenUpload) {
+      onOpenUpload('videos');
+    }
+
+    setNewVideoTitle('');
+    setNewVideoLink('');
+    setNewVideoFileUrl('');
+    setNewVideoFileName('');
+    setShowAddVideoModal(false);
+  };
+
   // Tự động phân loại nguồn Video: YouTube link hoặc tệp MP4 trực tiếp
   const activeYtId = extractYouTubeId(activeVideo?.youtubeId || activeVideo?.videoUrl || activeVideo?.externalLink || activeVideo?.fileUrl || '');
   
@@ -70,7 +111,7 @@ export default function VideosView({ videos = [], user, onOpenUpload, onUpdateVi
           {user ? (
             <button 
               style={{ background: '#16a34a', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
-              onClick={() => onOpenUpload && onOpenUpload('videos')}
+              onClick={() => setShowAddVideoModal(true)}
             >
               <Plus size={16} /> 📤 ĐĂNG & LƯU VIDEO MỚI
             </button>
@@ -287,6 +328,116 @@ export default function VideosView({ videos = [], user, onOpenUpload, onUpdateVi
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '10px' }}>
                   <button type="button" onClick={() => setEditingVideo(null)} style={{ padding: '8px 14px', background: '#e2e8f0', border: 'none', borderRadius: '4px', fontWeight: '600', cursor: 'pointer' }}>Hủy</button>
                   <button type="submit" style={{ padding: '8px 14px', background: '#0056a6', color: 'white', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer' }}>💾 LƯU THAY ĐỔI</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL TẠO MỚI VIDEO VIA LINK HOẶC FILE */}
+      {showAddVideoModal && (
+        <div className="modal-overlay" onClick={() => setShowAddVideoModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
+            <div className="modal-header" style={{ background: '#16a34a' }}>
+              <span style={{ fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Plus size={18} /> 🎬 ĐĂNG BÀI VIDEO HOẠT ĐỘNG MỚI
+              </span>
+              <button className="close-btn" onClick={() => setShowAddVideoModal(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleCreateVideoSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '5px' }}>
+                    1. Tiêu đề Video hoạt động:
+                  </label>
+                  <input 
+                    type="text" 
+                    value={newVideoTitle} 
+                    onChange={(e) => setNewVideoTitle(e.target.value)} 
+                    placeholder="VD: Video Khai giảng năm học 2026 - THCS Đồng Tân" 
+                    required 
+                    style={{ width: '100%', padding: '9px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '13px' }} 
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', marginBottom: '5px', color: '#0056a6' }}>
+                    2. Dán đường link Video (YouTube / Google Drive / TikTok / MP4):
+                  </label>
+                  <input 
+                    type="text" 
+                    value={newVideoLink} 
+                    onChange={(e) => setNewVideoLink(e.target.value)} 
+                    placeholder="https://www.youtube.com/watch?v=..." 
+                    style={{ width: '100%', padding: '9px', border: '2px solid #0284c7', borderRadius: '4px', fontSize: '13px' }} 
+                  />
+                  <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '4px' }}>
+                    💡 Thầy/Cô dán trực tiếp đường link YouTube hoặc link chia sẻ bất kỳ vào ô này.
+                  </div>
+                </div>
+
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '5px', color: '#16a34a' }}>
+                    3. Hoặc chọn tệp Video (.MP4) trực tiếp từ máy tính:
+                  </label>
+                  <input 
+                    type="file" 
+                    accept="video/*" 
+                    onChange={(e) => {
+                      const file = e.target.files && e.target.files[0];
+                      if (file) {
+                        setNewVideoFileName(file.name);
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          setNewVideoFileUrl(ev.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    style={{ width: '100%', fontSize: '12px', padding: '4px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                  />
+                  {newVideoFileName && (
+                    <div style={{ fontSize: '11.5px', color: '#16a34a', marginTop: '5px', fontWeight: '700' }}>
+                      ✓ Đã chọn tệp video: {newVideoFileName}
+                    </div>
+                  )}
+                </div>
+
+                {/* Live Real-time Video Preview */}
+                {(extractYouTubeId(newVideoLink) || newVideoFileUrl) && (
+                  <div style={{ background: '#0f172a', padding: '10px', borderRadius: '6px', textAlign: 'center' }}>
+                    <div style={{ color: '#38bdf8', fontSize: '12px', fontWeight: '700', marginBottom: '6px' }}>
+                      📺 Xem trước Trình phát Video:
+                    </div>
+                    {extractYouTubeId(newVideoLink) ? (
+                      <iframe
+                        width="100%"
+                        height="180"
+                        src={`https://www.youtube.com/embed/${extractYouTubeId(newVideoLink)}`}
+                        title="Live Preview"
+                        frameBorder="0"
+                      />
+                    ) : (
+                      <video controls src={newVideoFileUrl} style={{ width: '100%', maxHeight: '180px' }} />
+                    )}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowAddVideoModal(false)} 
+                    style={{ padding: '9px 16px', background: '#e2e8f0', border: 'none', borderRadius: '4px', fontWeight: '600', cursor: 'pointer' }}
+                  >
+                    Hủy
+                  </button>
+                  <button 
+                    type="submit" 
+                    style={{ padding: '9px 16px', background: '#16a34a', color: 'white', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '13.5px' }}
+                  >
+                    🚀 XÁC NHẬN ĐĂNG VIDEO CÔNG KHAI
+                  </button>
                 </div>
               </form>
             </div>
