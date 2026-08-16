@@ -246,7 +246,11 @@ export default function AdminPortal({
       } catch (err) {}
     }
 
-    if ((username === 'admin' && password === 'admin123') || (username === 'giaovien' && password === 'admin123')) {
+    // Offline LocalStorage password check
+    const storedPw = localStorage.getItem('user_password_' + username);
+    const activePassword = storedPw || 'admin123';
+
+    if (password === activePassword && (username === 'admin' || username === 'giaovien' || storedPw)) {
       const dummyUser = username === 'admin'
         ? { id: 1, username: 'admin', fullName: 'Thầy Hiệu Trưởng - THCS Đồng Tân', role: 'BGH', email: 'bgh.thcsdongtan@langson.edu.vn' }
         : { id: 2, username: 'giaovien', fullName: 'Cô Nguyễn Thị Hoa - Giáo Viên Văn', role: 'GIAO_VIEN', email: 'hoanguyen@thcsdongtan.edu.vn' };

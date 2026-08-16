@@ -6,6 +6,18 @@ import { JWT_SECRET, authGuard } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Helper so sánh mật khẩu an toàn (Hỗ trợ cả bcrypt hash và mật khẩu chưa mã hóa)
+async function verifyPassword(inputPassword, storedPassword) {
+  if (!inputPassword || !storedPassword) return false;
+  if (storedPassword.startsWith('$2a$') || storedPassword.startsWith('$2b$')) {
+    try {
+      const match = await bcrypt.compare(inputPassword, storedPassword);
+      if (match) return true;
+    } catch (e) {}
+  }
+  return inputPassword === storedPassword;
+}
+
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
@@ -23,10 +35,11 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ success: false, message: 'Tài khoản của bạn đang chờ Admin duyệt' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await verifyPassword(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ success: false, message: 'Tài khoản hoặc mật khẩu không chính xác' });
     }
+
 
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role, fullName: user.fullName },
@@ -164,7 +177,7 @@ router.post('/change-password', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Không tìm thấy thông tin tài khoản' });
     }
 
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    const isMatch = await verifyPassword(currentPassword, user.password);
     if (!isMatch) {
       return res.status(400).json({ success: false, message: 'Mật khẩu hiện tại không chính xác' });
     }

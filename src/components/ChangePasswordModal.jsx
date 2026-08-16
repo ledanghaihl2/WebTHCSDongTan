@@ -32,9 +32,12 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
 
     setLoading(true);
 
+    let isSuccess = false;
+    let errorMsg = '';
+
     // 1. Thử gửi đổi mật khẩu qua Backend API SQLite
     try {
-      await fetch('/api/auth/change-password', {
+      const res = await fetch('/api/auth/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -44,9 +47,34 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
           newPassword
         })
       });
-    } catch (err) {}
+      const data = await res.json();
+      if (res.ok && data.success) {
+        isSuccess = true;
+      } else {
+        errorMsg = data.message || 'Mật khẩu hiện tại không chính xác!';
+      }
+    } catch (err) {
+      // Backend offline fallback
+    }
 
-    // 2. Đồng bộ thay đổi mật khẩu lên Supabase Cloud Postgres
+    // 2. Nếu API offline, kiểm tra mật khẩu hiện tại trong local
+    if (!isSuccess && !errorMsg && user?.username) {
+      const storedPw = localStorage.getItem('user_password_' + user.username);
+      const activePassword = storedPw || 'admin123';
+      if (currentPassword === activePassword) {
+        isSuccess = true;
+      } else {
+        errorMsg = '❌ Mật khẩu hiện tại không chính xác!';
+      }
+    }
+
+    if (!isSuccess && errorMsg) {
+      setError(errorMsg);
+      setLoading(false);
+      return;
+    }
+
+    // 3. Đồng bộ thay đổi mật khẩu lên Supabase Cloud Postgres
     if (supabase && user?.username) {
       try {
         await supabase
@@ -56,7 +84,7 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
       } catch (err) {}
     }
 
-    // 3. Lưu mật khẩu mới vào LocalStorage để đảm bảo đăng nhập luôn ăn ngay lập tức
+    // 4. Lưu mật khẩu mới vào LocalStorage để đăng nhập luôn dùng mật khẩu mới
     if (user?.username) {
       localStorage.setItem('user_password_' + user.username, newPassword);
     }

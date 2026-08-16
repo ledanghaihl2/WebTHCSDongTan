@@ -10,7 +10,9 @@ import DocumentDetailModal from './components/DocumentDetailModal';
 import QuickUploadModal from './components/QuickUploadModal';
 import BulkUploadModal from './components/BulkUploadModal';
 import RegisterModal from './components/RegisterModal';
+import ChangePasswordModal from './components/ChangePasswordModal';
 import AdminPortal from './components/AdminPortal';
+
 import IntroView from './components/IntroView';
 import AlbumsView from './components/AlbumsView';
 import VideosView from './components/VideosView';
@@ -183,6 +185,8 @@ export default function App() {
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [uploadDefaultTab, setUploadDefaultTab] = useState('docs');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+
 
   // Admin Auth State
   const [token, setToken] = useState(localStorage.getItem('adminToken') || '');
@@ -555,11 +559,15 @@ export default function App() {
           setActiveTab(tab);
           setSelectedCategory(null);
         }} 
+        user={user}
         onOpenAdmin={() => setActiveTab('admin')} 
         onOpenUpload={() => handleOpenUpload('docs')}
         onOpenBulkUpload={handleOpenBulkUpload}
         onOpenRegister={() => setShowRegisterModal(true)}
+        onOpenChangePassword={() => setShowChangePasswordModal(true)}
+        onLogout={handleLogout}
       />
+
 
       <SubBar announcements={announcements} onSearch={handleSearch} />
 
@@ -723,6 +731,15 @@ export default function App() {
         <RegisterModal 
           onClose={() => setShowRegisterModal(false)} 
           onRegisterSuccess={handleRegisterSuccess}
+        />
+      )}
+
+      {/* Change Password Modal */}
+      {showChangePasswordModal && (
+        <ChangePasswordModal 
+          user={user} 
+          onClose={() => setShowChangePasswordModal(false)} 
+          onSuccess={() => setShowChangePasswordModal(false)}
         />
       )}
 
