@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { X, Upload, FilePlus, BookOpen, Newspaper, Image, Video, CheckCircle } from 'lucide-react';
 import { supabase, uploadFileToSupabase } from '../lib/supabaseClient';
 
-// Robust YouTube ID Extractor
+// Robust YouTube ID Extractor (Hỗ trợ tất cả dạng link: watch?v=, youtu.be/, shorts/, embed/)
 function extractYouTubeId(urlOrId) {
   if (!urlOrId) return '';
   const str = urlOrId.trim();
   if (str.length === 11 && !str.includes('/') && !str.includes('.')) {
     return str;
   }
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
   const match = str.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : '';
+  return (match && match[1]) ? match[1] : '';
 }
 
 export default function QuickUploadModal({ defaultTab = 'docs', categories = [], onClose, onAddNewItem }) {
@@ -239,17 +239,23 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
       }
 
     } else if (activeType === 'videos') {
-      const extractedYtId = extractYouTubeId(youtubeId || externalLink || '');
-      const isLocalVideoFile = fileUrl.startsWith('data:video') || fileUrl.endsWith('.mp4') || fileUrl.endsWith('.webm') || fileUrl.startsWith('/uploads');
+      const inputLink = youtubeId || externalLink || fileUrl || '';
+      const extractedYtId = extractYouTubeId(inputLink);
+      const isLocalVideoFile = fileUrl.startsWith('data:video') || fileUrl.endsWith('.mp4') || fileUrl.endsWith('.webm') || fileUrl.startsWith('/uploads') || fileUrl.startsWith('blob:');
       
+      const finalVideoUrl = isLocalVideoFile ? fileUrl : (externalLink || fileUrl || (extractedYtId ? `https://www.youtube.com/watch?v=${extractedYtId}` : ''));
+      const finalThumb = extractedYtId 
+        ? `https://img.youtube.com/vi/${extractedYtId}/hqdefault.jpg` 
+        : 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600&q=80';
+
       newItem = {
         id: newItemId,
         title: title || 'Video hoạt động trường học mới',
         youtubeId: extractedYtId,
-        videoUrl: isLocalVideoFile ? fileUrl : (fileUrl || ''),
-        thumbnailUrl: isLocalVideoFile ? 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600&q=80' : (extractedYtId ? `https://img.youtube.com/vi/${extractedYtId}/hqdefault.jpg` : 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=600&q=80'),
+        videoUrl: finalVideoUrl,
+        thumbnailUrl: finalThumb,
         views: 1,
-        externalLink: externalLink || (extractedYtId ? `https://www.youtube.com/watch?v=${extractedYtId}` : '')
+        externalLink: externalLink || inputLink
       };
 
       if (supabase) {
@@ -257,7 +263,7 @@ export default function QuickUploadModal({ defaultTab = 'docs', categories = [],
           await supabase.from('videos').insert([{
             title: newItem.title,
             youtube_id: newItem.youtubeId,
-            video_url: getSafeDbUrl(newItem.videoUrl),
+            video_url: getSafeDbFileUrl(newItem.videoUrl),
             thumbnail_url: newItem.thumbnailUrl,
             external_link: newItem.externalLink
           }]);

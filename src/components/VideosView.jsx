@@ -1,5 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Video, Play, Eye, ExternalLink, Upload, AlertTriangle, Trash2, Plus, Edit } from 'lucide-react';
+// Robust YouTube ID Extractor (Hỗ trợ tất cả dạng link: watch?v=, youtu.be/, shorts/, embed/)
+function extractYouTubeId(urlOrId) {
+  if (!urlOrId) return '';
+  const str = urlOrId.trim();
+  if (str.length === 11 && !str.includes('/') && !str.includes('.')) {
+    return str;
+  }
+  const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+  const match = str.match(regExp);
+  return (match && match[1]) ? match[1] : '';
+}
 
 export default function VideosView({ videos = [], user, onOpenUpload, onUpdateVideo, onDeleteVideo }) {
   const [editingVideo, setEditingVideo] = useState(null);
@@ -35,8 +44,17 @@ export default function VideosView({ videos = [], user, onOpenUpload, onUpdateVi
     setIframeError(false);
   };
 
-  const isLocalVideo = activeVideo?.videoUrl || (activeVideo?.fileUrl && (activeVideo.fileUrl.endsWith('.mp4') || activeVideo.fileUrl.startsWith('data:video') || activeVideo.fileUrl.startsWith('/uploads')));
-  const videoSrc = activeVideo?.videoUrl || activeVideo?.fileUrl;
+  // Tự động phân loại nguồn Video: YouTube link hoặc tệp MP4 trực tiếp
+  const activeYtId = extractYouTubeId(activeVideo?.youtubeId || activeVideo?.videoUrl || activeVideo?.externalLink || activeVideo?.fileUrl || '');
+  
+  const rawVideoFileSrc = activeVideo?.videoUrl || activeVideo?.fileUrl || '';
+  const isVideoFileSrc = rawVideoFileSrc && (
+    rawVideoFileSrc.startsWith('data:video') || 
+    rawVideoFileSrc.endsWith('.mp4') || 
+    rawVideoFileSrc.endsWith('.webm') || 
+    rawVideoFileSrc.startsWith('/uploads') || 
+    rawVideoFileSrc.startsWith('blob:')
+  );
 
   return (
     <div style={{ padding: '20px', maxWidth: '1100px', margin: '0 auto' }}>
@@ -68,38 +86,38 @@ export default function VideosView({ videos = [], user, onOpenUpload, onUpdateVi
           {/* Main Active Video Player */}
           {activeVideo && (
             <div style={{ marginBottom: '25px', background: '#000', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
-              {isLocalVideo ? (
-                <video 
-                  controls 
-                  src={videoSrc} 
-                  style={{ width: '100%', height: '450px', objectFit: 'contain', background: '#000' }}
-                  poster={activeVideo.thumbnailUrl}
-                  autoPlay
-                />
-              ) : activeVideo.youtubeId ? (
+              {activeYtId ? (
                 <iframe
                   width="100%"
                   height="450"
-                  src={`https://www.youtube.com/embed/${activeVideo.youtubeId}?autoplay=1&rel=0`}
+                  src={`https://www.youtube.com/embed/${activeYtId}?autoplay=1&rel=0`}
                   title={activeVideo.title}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                   onError={() => setIframeError(true)}
                 ></iframe>
+              ) : isVideoFileSrc ? (
+                <video 
+                  controls 
+                  src={rawVideoFileSrc} 
+                  style={{ width: '100%', height: '450px', objectFit: 'contain', background: '#000' }}
+                  poster={activeVideo.thumbnailUrl}
+                  autoPlay
+                />
               ) : (
                 <div style={{ padding: '60px 20px', color: 'white', textAlign: 'center', background: '#1e293b' }}>
                   <AlertTriangle size={40} color="#f59e0b" style={{ marginBottom: '10px' }} />
-                  <h3 style={{ fontSize: '16px', color: '#f59e0b' }}>Không thể phát trực tiếp Video này</h3>
-                  <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '15px' }}>Vui lòng kiểm tra lại liên kết video hoặc tải tệp .MP4 mới lên!</p>
-                  {activeVideo.externalLink && (
+                  <h3 style={{ fontSize: '16px', color: '#f59e0b' }}>Video hoạt động THCS Đồng Tân</h3>
+                  <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '15px' }}>Nhấp nút bên dưới để xem trực tiếp Video này trên kênh chính thức:</p>
+                  {(activeVideo.externalLink || rawVideoFileSrc) && (
                     <a 
-                      href={activeVideo.externalLink} 
+                      href={activeVideo.externalLink || rawVideoFileSrc} 
                       target="_blank" 
                       rel="noreferrer"
                       style={{ background: '#ef4444', color: 'white', textDecoration: 'none', padding: '10px 20px', borderRadius: '6px', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                     >
-                      <ExternalLink size={16} /> Mở Trang Video Gốc
+                      <ExternalLink size={16} /> ▶️ PHÁT VIDEO NÀY NGAY
                     </a>
                   )}
                 </div>
@@ -218,12 +236,46 @@ export default function VideosView({ videos = [], user, onOpenUpload, onUpdateVi
                   <input type="text" value={editingVideo.title} onChange={(e) => setEditingVideo({ ...editingVideo, title: e.target.value })} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>YouTube ID (Mã 11 ký tự):</label>
-                  <input type="text" value={editingVideo.youtubeId || ''} onChange={(e) => setEditingVideo({ ...editingVideo, youtubeId: e.target.value })} placeholder="k8F4q_N-g_w" style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Đường link hoặc ID YouTube:</label>
+                  <input 
+                    type="text" 
+                    value={editingVideo.youtubeId || ''} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const parsedId = extractYouTubeId(val);
+                      setEditingVideo({ 
+                        ...editingVideo, 
+                        youtubeId: parsedId || val,
+                        thumbnailUrl: parsedId ? `https://img.youtube.com/vi/${parsedId}/hqdefault.jpg` : editingVideo.thumbnailUrl
+                      });
+                    }} 
+                    placeholder="https://www.youtube.com/watch?v=..." 
+                    style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} 
+                  />
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>💡 Thầy/Cô có thể dán nguyên đường link YouTube vào đây, hệ thống sẽ tự bóc tách mã ID.</span>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Đường dẫn Video MP4 (nếu có):</label>
-                  <input type="text" value={editingVideo.videoUrl || ''} onChange={(e) => setEditingVideo({ ...editingVideo, videoUrl: e.target.value })} placeholder="https://..." style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Đường dẫn Video MP4 (Hoặc link trực tiếp):</label>
+                  <input type="text" value={editingVideo.videoUrl || ''} onChange={(e) => setEditingVideo({ ...editingVideo, videoUrl: e.target.value })} placeholder="https://.../video.mp4" style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '4px' }} />
+                  
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#0056a6', marginBottom: '4px', cursor: 'pointer' }}>
+                    📹 Hoặc chọn tệp Video (.MP4) trực tiếp từ máy tính của Thầy/Cô:
+                  </label>
+                  <input 
+                    type="file" 
+                    accept="video/*" 
+                    onChange={(e) => {
+                      const file = e.target.files && e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          setEditingVideo({ ...editingVideo, videoUrl: ev.target.result, externalLink: file.name });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    style={{ width: '100%', fontSize: '12px' }}
+                  />
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Đường dẫn Ảnh đại diện (Thumbnail):</label>
