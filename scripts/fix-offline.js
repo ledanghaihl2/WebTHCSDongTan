@@ -1,34 +1,38 @@
 import fs from 'fs';
 import path from 'path';
 
-const distIndexPath = path.resolve('dist/index.html');
+const distDir = path.resolve('dist');
 const destDir = 'D:/Web THCS Đồng Tân';
-const destIndexPath = path.join(destDir, 'index.html');
-const destDistIndexPath = path.join(destDir, 'dist/index.html');
+
+function copyFolderRecursiveSync(source, target) {
+  if (!fs.existsSync(target)) {
+    fs.mkdirSync(target, { recursive: true });
+  }
+
+  if (fs.lstatSync(source).isDirectory()) {
+    const files = fs.readdirSync(source);
+    files.forEach((file) => {
+      const curSource = path.join(source, file);
+      const curTarget = path.join(target, file);
+      if (fs.lstatSync(curSource).isDirectory()) {
+        copyFolderRecursiveSync(curSource, curTarget);
+      } else {
+        fs.copyFileSync(curSource, curTarget);
+      }
+    });
+  }
+}
 
 try {
-  let content = fs.readFileSync(distIndexPath, 'utf8');
-  
-  // Remove type="module" and crossorigin attributes to allow native execution over file:// protocol in Chrome/Edge
-  content = content.replaceAll('type="module" crossorigin', '');
-  content = content.replaceAll('type="module"', '');
-  content = content.replaceAll('crossorigin=""', '');
-  content = content.replaceAll('crossorigin', '');
-
-  // Strip any leftover ES export statements at the end of inline scripts
-  content = content.replace(/export\s*\{\s*[^}]*\};?/g, '');
-  content = content.replace(/export\s+default\s+[^;]+;?/g, '');
-
-  fs.writeFileSync(distIndexPath, content, 'utf8');
-  console.log('✅ Fixed dist/index.html module attributes and exports');
-
   if (fs.existsSync(destDir)) {
-    fs.writeFileSync(destIndexPath, content, 'utf8');
-    if (fs.existsSync(path.join(destDir, 'dist'))) {
-      fs.writeFileSync(destDistIndexPath, content, 'utf8');
-    }
-    console.log(`✅ Successfully updated ${destIndexPath} for instant file:// offline access!`);
+    // Copy dist/index.html to root index.html of D:\Web THCS Đồng Tân
+    fs.copyFileSync(path.join(distDir, 'index.html'), path.join(destDir, 'index.html'));
+    
+    // Copy entire dist directory contents to D:\Web THCS Đồng Tân\dist
+    copyFolderRecursiveSync(distDir, path.join(destDir, 'dist'));
+    
+    console.log('✅ Successfully updated D:\\Web THCS Đồng Tân build files for 100% stable localhost & web access!');
   }
 } catch (err) {
-  console.error('Lỗi khi fix file index.html:', err);
+  console.error('Lỗi khi copy build files:', err);
 }

@@ -11,39 +11,6 @@
   </head>
   <body>
     <div id="root"></div>
-
-    <script>
-      // Fail-safe watchdog script: Tránh tối đa trường hợp bị màn hình trắng khi mở ngoại tuyến file://
-      window.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-          var rootEl = document.getElementById('root');
-          if (rootEl && rootEl.children.length === 0) {
-            rootEl.innerHTML = `
-              <div style="font-family: 'Roboto', sans-serif; padding: 40px 24px; max-width: 680px; margin: 60px auto; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); border-top: 6px solid #0056a6; text-align: center;">
-                <div style="font-size: 56px; margin-bottom: 12px;">🏫</div>
-                <h2 style="color: #003a73; margin-bottom: 12px; font-size: 22px; font-weight: 700;">CỔNG THÔNG TIN ĐIỆN TỬ TRƯỜNG THCS ĐỒNG TÂN</h2>
-                <p style="color: #475569; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
-                  Hệ thống đang mở dưới chế độ xem tệp ngoại tuyến (file://).<br/>
-                  Để xem đầy đủ giao diện và dữ liệu mượt mà nhất, Thầy/Cô vui lòng chọn một trong hai cách bên dưới:
-                </p>
-                <div style="margin-bottom: 24px;">
-                  <a href="http://localhost:3001" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #0056a6, #003a73); color: #ffffff; text-decoration: none; font-weight: bold; padding: 14px 28px; border-radius: 8px; font-size: 16px; box-shadow: 0 4px 12px rgba(0,86,166,0.3);">
-                    🚀 MỞ WEBSITE TRÊN TRÌNH DUYỆT (HTTP://LOCALHOST:3001)
-                  </a>
-                </div>
-                <div style="background: #f8fafc; padding: 16px; border-radius: 10px; font-size: 14px; color: #1e293b; border: 1px dashed #cbd5e1; text-align: left;">
-                  💡 <strong>Hướng dẫn khởi động nhanh:</strong><br/>
-                  1. Mở thư mục <code>D:\\Web THCS Đồng Tân</code><br/>
-                  2. Nhấp đúp vào file: <strong>chay-website.bat</strong><br/>
-                  3. Trang web sẽ tự động bật lên với đầy đủ tính năng 100%!
-                </div>
-              </div>
-            `;
-          }
-        }, 1500);
-      });
-    </script>
-
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
