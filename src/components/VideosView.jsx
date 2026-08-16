@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Video, Play, Eye, ExternalLink, Upload, AlertTriangle, Trash2, Plus } from 'lucide-react';
+import { Video, Play, Eye, ExternalLink, Upload, AlertTriangle, Trash2, Plus, Edit } from 'lucide-react';
 
-export default function VideosView({ videos = [], onOpenUpload, onDeleteVideo }) {
+export default function VideosView({ videos = [], user, onOpenUpload, onUpdateVideo, onDeleteVideo }) {
+  const [editingVideo, setEditingVideo] = useState(null);
+  const isAdmin = user && (user.role === 'BGH' || user.role === 'ADMIN');
   const videoList = videos.length > 0 ? videos : [
     {
       id: 1,
@@ -105,6 +107,14 @@ export default function VideosView({ videos = [], onOpenUpload, onDeleteVideo })
                 </div>
 
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  {isAdmin && (
+                    <button 
+                      onClick={() => setEditingVideo(activeVideo)}
+                      style={{ background: '#0284c7', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '4px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                    >
+                      <Edit size={14} /> Sửa Video
+                    </button>
+                  )}
                   {onDeleteVideo && (
                     <button 
                       onClick={() => onDeleteVideo(activeVideo.id)}
@@ -179,6 +189,46 @@ export default function VideosView({ videos = [], onOpenUpload, onDeleteVideo })
 
         </div>
       </div>
+
+      {/* MODAL CHỈNH SỬA VIDEO */}
+      {editingVideo && (
+        <div className="modal-overlay" onClick={() => setEditingVideo(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header" style={{ background: '#0056a6' }}>
+              <span style={{ fontSize: '14px', fontWeight: '700' }}>🎬 CHỈNH SỬA VIDEO CLIP</span>
+              <button className="close-btn" onClick={() => setEditingVideo(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                onUpdateVideo && onUpdateVideo(editingVideo);
+                setEditingVideo(null);
+              }} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Tiêu đề Video:</label>
+                  <input type="text" value={editingVideo.title} onChange={(e) => setEditingVideo({ ...editingVideo, title: e.target.value })} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>YouTube ID (Mã 11 ký tự):</label>
+                  <input type="text" value={editingVideo.youtubeId || ''} onChange={(e) => setEditingVideo({ ...editingVideo, youtubeId: e.target.value })} placeholder="k8F4q_N-g_w" style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Đường dẫn Video MP4 (nếu có):</label>
+                  <input type="text" value={editingVideo.videoUrl || ''} onChange={(e) => setEditingVideo({ ...editingVideo, videoUrl: e.target.value })} placeholder="https://..." style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Đường dẫn Ảnh đại diện (Thumbnail):</label>
+                  <input type="text" value={editingVideo.thumbnailUrl || ''} onChange={(e) => setEditingVideo({ ...editingVideo, thumbnailUrl: e.target.value })} placeholder="https://..." style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                  <button type="button" onClick={() => setEditingVideo(null)} style={{ padding: '8px 14px', background: '#e2e8f0', border: 'none', borderRadius: '4px', fontWeight: '600', cursor: 'pointer' }}>Hủy</button>
+                  <button type="submit" style={{ padding: '8px 14px', background: '#0056a6', color: 'white', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer' }}>💾 LƯU THAY ĐỔI</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

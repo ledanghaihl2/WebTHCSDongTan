@@ -537,9 +537,94 @@ export default function App() {
 
   const handleDeleteVideo = async (videoId) => {
     setVideos(prev => prev.filter(v => v.id !== videoId));
+    try {
+      const stored = JSON.parse(localStorage.getItem('portal_videos') || '[]');
+      localStorage.setItem('portal_videos', JSON.stringify(stored.filter(v => v.id !== videoId)));
+    } catch (e) {}
     if (supabase) {
       try {
         await supabase.from('videos').delete().eq('id', videoId);
+      } catch (err) {}
+    }
+  };
+
+  const handleUpdateVideo = async (updatedVid) => {
+    setVideos(prev => prev.map(v => v.id === updatedVid.id ? updatedVid : v));
+    try {
+      const stored = JSON.parse(localStorage.getItem('portal_videos') || '[]');
+      localStorage.setItem('portal_videos', JSON.stringify(stored.map(v => v.id === updatedVid.id ? updatedVid : v)));
+    } catch (e) {}
+    if (supabase) {
+      try {
+        await supabase.from('videos').update({
+          title: updatedVid.title,
+          youtube_id: updatedVid.youtubeId,
+          video_url: updatedVid.videoUrl,
+          thumbnail_url: updatedVid.thumbnailUrl
+        }).eq('id', updatedVid.id);
+      } catch (err) {}
+    }
+  };
+
+  const handleUpdateAlbum = async (updatedAlbum) => {
+    setAlbums(prev => prev.map(a => a.id === updatedAlbum.id ? updatedAlbum : a));
+    try {
+      const stored = JSON.parse(localStorage.getItem('portal_albums') || '[]');
+      localStorage.setItem('portal_albums', JSON.stringify(stored.map(a => a.id === updatedAlbum.id ? updatedAlbum : a)));
+    } catch (e) {}
+    if (supabase) {
+      try {
+        await supabase.from('albums').update({
+          title: updatedAlbum.title,
+          date: updatedAlbum.date,
+          cover: updatedAlbum.cover,
+          description: updatedAlbum.description
+        }).eq('id', updatedAlbum.id);
+      } catch (err) {}
+    }
+  };
+
+  const handleDeleteAlbum = async (albumId) => {
+    setAlbums(prev => prev.filter(a => a.id !== albumId));
+    try {
+      const stored = JSON.parse(localStorage.getItem('portal_albums') || '[]');
+      localStorage.setItem('portal_albums', JSON.stringify(stored.filter(a => a.id !== albumId)));
+    } catch (e) {}
+    if (supabase) {
+      try {
+        await supabase.from('albums').delete().eq('id', albumId);
+      } catch (err) {}
+    }
+  };
+
+  const handleUpdateResource = async (updatedRes) => {
+    setResources(prev => prev.map(r => r.id === updatedRes.id ? updatedRes : r));
+    try {
+      const stored = JSON.parse(localStorage.getItem('portal_resources') || '[]');
+      localStorage.setItem('portal_resources', JSON.stringify(stored.map(r => r.id === updatedRes.id ? updatedRes : r)));
+    } catch (e) {}
+    if (supabase) {
+      try {
+        await supabase.from('resources').update({
+          title: updatedRes.title,
+          type: updatedRes.type,
+          subject: updatedRes.subject,
+          author: updatedRes.author,
+          date: updatedRes.date
+        }).eq('id', updatedRes.id);
+      } catch (err) {}
+    }
+  };
+
+  const handleDeleteResource = async (resId) => {
+    setResources(prev => prev.filter(r => r.id !== resId));
+    try {
+      const stored = JSON.parse(localStorage.getItem('portal_resources') || '[]');
+      localStorage.setItem('portal_resources', JSON.stringify(stored.filter(r => r.id !== resId)));
+    } catch (e) {}
+    if (supabase) {
+      try {
+        await supabase.from('resources').delete().eq('id', resId);
       } catch (err) {}
     }
   };
@@ -604,12 +689,11 @@ export default function App() {
       ) : activeTab === 'intro' ? (
         <IntroView siteConfig={siteConfig} />
       ) : activeTab === 'albums' ? (
-        <AlbumsView albums={albums} />
+        <AlbumsView albums={albums} user={user} onUpdateAlbum={handleUpdateAlbum} onDeleteAlbum={handleDeleteAlbum} />
       ) : activeTab === 'videos' ? (
-        <VideosView videos={videos} onOpenUpload={handleOpenUpload} onDeleteVideo={handleDeleteVideo} />
+        <VideosView videos={videos} user={user} onOpenUpload={handleOpenUpload} onUpdateVideo={handleUpdateVideo} onDeleteVideo={handleDeleteVideo} />
       ) : activeTab === 'resources' ? (
-
-        <ResourcesView resources={resources} onOpenUpload={handleOpenUpload} onOpenBulkUpload={handleOpenBulkUpload} />
+        <ResourcesView resources={resources} user={user} onOpenUpload={handleOpenUpload} onOpenBulkUpload={handleOpenBulkUpload} onUpdateResource={handleUpdateResource} onDeleteResource={handleDeleteResource} />
       ) : activeTab === 'schedule' ? (
         <ScheduleView schedule={schedules} />
       ) : activeTab === 'contact' ? (
@@ -650,12 +734,27 @@ export default function App() {
                         📅 Ban hành: {doc.issueDate} | ✍️ Người ký: {doc.signer} | 📂 {doc.category}
                       </div>
                     </div>
-                    <button 
-                      style={{ background: '#0284c7', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', whiteSpace: 'nowrap' }}
-                      onClick={() => handleSelectDocument(doc.id)}
-                    >
-                      Xem & Tải về
-                    </button>
+
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      {user && (user.role === 'BGH' || user.role === 'ADMIN') && (
+                        <button 
+                          onClick={() => {
+                            if (window.confirm(`Thầy/Cô có chắc muốn xóa văn bản: "${doc.title}"?`)) {
+                              handleDeleteDocument(doc.id);
+                            }
+                          }}
+                          style={{ background: '#ef4444', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '12px' }}
+                        >
+                          🗑️ Xóa
+                        </button>
+                      )}
+                      <button 
+                        style={{ background: '#0284c7', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', whiteSpace: 'nowrap' }}
+                        onClick={() => handleSelectDocument(doc.id)}
+                      >
+                        Xem & Tải về
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

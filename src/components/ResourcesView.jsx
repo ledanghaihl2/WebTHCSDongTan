@@ -177,6 +177,55 @@ export default function ResourcesView({ resources = [], user, onOpenUpload, onOp
 
         </div>
       </div>
+
+      {/* MODAL CHỈNH SỬA TÀI NGUYÊN HỌC LIỆU */}
+      {editingResource && (
+        <div className="modal-overlay" onClick={() => setEditingResource(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header" style={{ background: '#0056a6' }}>
+              <span style={{ fontSize: '14px', fontWeight: '700' }}>📚 CHỈNH SỬA TÀI NGUYÊN HỌC LIỆU</span>
+              <button className="close-btn" onClick={() => setEditingResource(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                onUpdateResource && onUpdateResource(editingResource);
+                setEditingResource(null);
+              }} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Tên tài liệu / Đề thi:</label>
+                  <input type="text" value={editingResource.title} onChange={(e) => setEditingResource({ ...editingResource, title: e.target.value })} required style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Loại tài nguyên:</label>
+                  <select value={editingResource.type} onChange={(e) => setEditingResource({ ...editingResource, type: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }}>
+                    <option value="Đề thi & Đáp án">Đề thi & Đáp án</option>
+                    <option value="Giáo án điện tử">Giáo án điện tử</option>
+                    <option value="Tài liệu ôn thi">Tài liệu ôn thi</option>
+                    <option value="Sáng kiến kinh nghiệm">Sáng kiến kinh nghiệm</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Môn học / Lớp:</label>
+                  <input type="text" value={editingResource.subject} onChange={(e) => setEditingResource({ ...editingResource, subject: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Tác giả / Tổ chuyên môn:</label>
+                  <input type="text" value={editingResource.author} onChange={(e) => setEditingResource({ ...editingResource, author: e.target.value })} style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '700', marginBottom: '4px' }}>Liên kết ngoài / Google Drive:</label>
+                  <input type="text" value={editingResource.externalLink || ''} onChange={(e) => setEditingResource({ ...editingResource, externalLink: e.target.value })} placeholder="https://drive.google.com/..." style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '10px' }}>
+                  <button type="button" onClick={() => setEditingResource(null)} style={{ padding: '8px 14px', background: '#e2e8f0', border: 'none', borderRadius: '4px', fontWeight: '600', cursor: 'pointer' }}>Hủy</button>
+                  <button type="submit" style={{ padding: '8px 14px', background: '#0056a6', color: 'white', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer' }}>💾 LƯU THAY ĐỔI</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
