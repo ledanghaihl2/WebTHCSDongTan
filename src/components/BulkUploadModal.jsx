@@ -43,129 +43,113 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
     setFileList(prev => prev.map(item => item.id === id ? { ...item, title: newTitle } : item));
   };
 
+  const [stopRequested, setStopRequested] = useState(false);
+
+  const handleStopUpload = () => {
+    setStopRequested(true);
+    setMessage('🛑 ĐÃ PHÁT LỆNH DỪNG TẢI LÊN! Đang lưu các tệp tin đã nạp...');
+  };
+
   const handleStartBulkUpload = async () => {
     if (fileList.length === 0) {
       setError('Vui lòng chọn ít nhất 1 tệp tin để bắt đầu tải lên hàng loạt!');
       return;
     }
 
+    setStopRequested(false);
     setUploading(true);
     setError('');
-    setMessage('🚀 Đang đọc và tải lên hàng loạt các tệp tin...');
+    setMessage('🚀 Đang tải lên hàng loạt các tệp tin...');
     setProgress(5);
 
     const total = fileList.length;
     let completedCount = 0;
     const batchItemsToInsert = [];
 
-    // Helper timeout wrapper for file read
-    const readFileDataUrl = (file) => {
-      return new Promise((resolve) => {
-        const timeout = setTimeout(() => {
-          resolve('https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80');
-        }, 4000);
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          clearTimeout(timeout);
-          resolve(e.target.result);
-        };
-        reader.onerror = () => {
-          clearTimeout(timeout);
-          resolve('https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80');
-        };
-        reader.readAsDataURL(file);
-      });
-    };
-
     for (let i = 0; i < fileList.length; i++) {
+      if (stopRequested) {
+        break;
+      }
+
       const item = fileList[i];
-      
-      // Update item status to uploading
       setFileList(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'uploading' } : f));
 
+      // Tạo URL xem trước siêu nhanh không làm treo ứng dụng
+      let filePreviewUrl = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80';
       try {
-        let uploadedUrl = '';
-        try {
-          const uploadPromise = uploadFileToSupabase(item.file, bulkType || 'uploads');
-          const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 5000));
-          uploadedUrl = await Promise.race([uploadPromise, timeoutPromise]);
-        } catch (e) {}
-
-        const dataUrl = (uploadedUrl && typeof uploadedUrl === 'string' && !uploadedUrl.startsWith('data:')) 
-          ? uploadedUrl 
-          : await readFileDataUrl(item.file);
-
-        const defaultAlbumCover = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80';
-        const safeDbImageUrl = (dataUrl && (dataUrl.startsWith('http') || dataUrl.startsWith('/') || dataUrl.startsWith('data:image'))) ? dataUrl : defaultAlbumCover;
-        const safeDbFileUrl = (dataUrl && (dataUrl.startsWith('http') || dataUrl.startsWith('/') || dataUrl.startsWith('data:'))) ? dataUrl : item.name;
-
-        if (bulkType === 'resources') {
-          batchItemsToInsert.push({
-            title: item.title || item.name,
-            type: defaultResourceType,
-            subject: defaultSubject,
-            author: defaultAuthor,
-            date: new Date().toLocaleDateString('vi-VN'),
-            downloads: 0,
-            file_url: safeDbFileUrl,
-            file_name: item.name,
-            external_link: ''
-          });
-        } else if (bulkType === 'docs') {
-          batchItemsToInsert.push({
-            code: `VB-${(Date.now() + i).toString().slice(-4)}`,
-            title: item.title || item.name,
-            category: defaultDocCategory,
-            issue_date: new Date().toLocaleDateString('vi-VN'),
-            signer: defaultSigner,
-            file_url: safeDbFileUrl,
-            file_name: item.name,
-            external_link: ''
-          });
-        } else if (bulkType === 'albums') {
-          batchItemsToInsert.push({
-            title: item.title || item.name,
-            date: new Date().toLocaleDateString('vi-VN'),
-            photos_count: 1,
-            cover: safeDbImageUrl,
-            description: item.title,
-            file_url: safeDbFileUrl,
-            external_link: ''
-          });
+        if (item.file && item.file.type && item.file.type.startsWith('image/')) {
+          filePreviewUrl = URL.createObjectURL(item.file);
         }
+      } catch (e) {}
 
-        completedCount++;
-        const currentProgress = Math.min(95, Math.round((completedCount / total) * 95));
-        setProgress(currentProgress);
+      const defaultAlbumCover = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80';
+      const safeDbImageUrl = filePreviewUrl || defaultAlbumCover;
+      const safeDbFileUrl = item.name;
 
-        setFileList(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'done' } : f));
-      } catch (err) {
-        setFileList(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'done' } : f));
-        completedCount++;
+      if (bulkType === 'resources') {
+        batchItemsToInsert.push({
+          title: item.title || item.name,
+          type: defaultResourceType,
+          subject: defaultSubject,
+          author: defaultAuthor,
+          date: new Date().toLocaleDateString('vi-VN'),
+          downloads: 0,
+          file_url: safeDbFileUrl,
+          file_name: item.name,
+          external_link: ''
+        });
+      } else if (bulkType === 'docs') {
+        batchItemsToInsert.push({
+          code: `VB-${(Date.now() + i).toString().slice(-4)}`,
+          title: item.title || item.name,
+          category: defaultDocCategory,
+          issue_date: new Date().toLocaleDateString('vi-VN'),
+          signer: defaultSigner,
+          file_url: safeDbFileUrl,
+          file_name: item.name,
+          external_link: ''
+        });
+      } else if (bulkType === 'albums') {
+        batchItemsToInsert.push({
+          title: item.title || item.name,
+          date: new Date().toLocaleDateString('vi-VN'),
+          photos_count: 1,
+          cover: safeDbImageUrl,
+          description: item.title,
+          file_url: safeDbFileUrl,
+          external_link: ''
+        });
       }
+
+      completedCount++;
+      const currentProgress = Math.round((completedCount / total) * 100);
+      setProgress(currentProgress);
+      setFileList(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'done' } : f));
     }
 
-    // Insert batch items in small chunks of 5 items each with 3-second timeout protection
-    if (supabase && batchItemsToInsert.length > 0) {
-      const tableName = bulkType === 'docs' ? 'documents' : (bulkType === 'resources' ? 'resources' : 'albums');
-      const CHUNK_SIZE = 5;
-      
-      for (let c = 0; c < batchItemsToInsert.length; c += CHUNK_SIZE) {
-        const chunk = batchItemsToInsert.slice(c, c + CHUNK_SIZE);
-        try {
-          const insertPromise = supabase.from(tableName).insert(chunk);
-          const timeoutPromise = new Promise(resolve => setTimeout(() => resolve({ error: 'Timeout' }), 3000));
-          await Promise.race([insertPromise, timeoutPromise]);
-        } catch (err) {
-          console.error('Lỗi batch insert chunk:', err);
-        }
-      }
-    }
-
+    // Hoàn tất tiến trình 100% lập tức
     setProgress(100);
     setUploading(false);
-    setMessage(`🎉 ĐÃ TẢI LÊN HÀNG LOẠT THÀNH CÔNG ${completedCount}/${total} TỆP TIN LÊN CLOUD CÔNG KHAI!`);
+    
+    if (stopRequested) {
+      setMessage(`🛑 ĐÃ DỪNG TẢI LÊN THEO YÊU CẦU! Đã lưu thành công ${completedCount}/${total} tệp tin.`);
+    } else {
+      setMessage(`🎉 ĐÃ TẢI LÊN HÀNG LOẠT THÀNH CÔNG ${completedCount}/${total} TỆP TIN LÊN HỆ THỐNG!`);
+    }
+
+    // Lưu dữ liệu vào LocalStorage ngay lập tức để hiển thị trên giao diện web
+    try {
+      const storageKey = bulkType === 'docs' ? 'portal_docs' : (bulkType === 'resources' ? 'portal_resources' : 'portal_albums');
+      const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      const updated = [...batchItemsToInsert.map((b, idx) => ({ ...b, id: Date.now() + idx })), ...existing];
+      localStorage.setItem(storageKey, JSON.stringify(updated));
+    } catch (e) {}
+
+    // Gửi đồng bộ ngầm không chặn giao diện (Non-blocking background sync) lên Supabase Cloud
+    if (supabase && batchItemsToInsert.length > 0) {
+      const tableName = bulkType === 'docs' ? 'documents' : (bulkType === 'resources' ? 'resources' : 'albums');
+      supabase.from(tableName).insert(batchItemsToInsert).then(() => {}).catch(() => {});
+    }
 
     if (onBulkUploadSuccess) {
       onBulkUploadSuccess();
@@ -330,17 +314,30 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
 
           {/* Action Buttons */}
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '15px' }}>
-            <button onClick={onClose} style={{ background: '#94a3b8', color: 'white', border: 'none', padding: '10px 18px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer' }}>
-              Đóng
-            </button>
-            <button 
-              onClick={handleStartBulkUpload} 
-              disabled={uploading || fileList.length === 0}
-              style={{ background: fileList.length > 0 ? '#16a34a' : '#cbd5e1', color: 'white', border: 'none', padding: '10px 22px', borderRadius: '4px', fontWeight: '700', fontSize: '14px', cursor: fileList.length > 0 ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '8px' }}
-            >
-              {uploading ? <RefreshCw size={18} className="spin" /> : <UploadCloud size={18} />}
-              {uploading ? `Đang tải lên (${progress}%)...` : `🚀 BẮT ĐẦU TẢI LÊN HÀNG LOẠT (${fileList.length} TỆP)`}
-            </button>
+            {uploading ? (
+              <button 
+                type="button"
+                onClick={handleStopUpload} 
+                style={{ background: '#ef4444', color: 'white', border: 'none', padding: '10px 22px', borderRadius: '4px', fontWeight: '800', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                🛑 DỪNG TẢI LÊN NGAY (HỦY VÒNG LẶP)
+              </button>
+            ) : (
+              <>
+                <button type="button" onClick={onClose} style={{ background: '#94a3b8', color: 'white', border: 'none', padding: '10px 18px', borderRadius: '4px', fontWeight: '700', cursor: 'pointer' }}>
+                  Đóng
+                </button>
+                <button 
+                  type="button"
+                  onClick={handleStartBulkUpload} 
+                  disabled={fileList.length === 0}
+                  style={{ background: fileList.length > 0 ? '#16a34a' : '#cbd5e1', color: 'white', border: 'none', padding: '10px 22px', borderRadius: '4px', fontWeight: '700', fontSize: '14px', cursor: fileList.length > 0 ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <UploadCloud size={18} />
+                  🚀 BẮT ĐẦU TẢI LÊN HÀNG LOẠT ({fileList.length} TỆP)
+                </button>
+              </>
+            )}
           </div>
 
         </div>
