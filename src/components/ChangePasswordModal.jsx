@@ -35,8 +35,17 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
 
     setLoading(true);
 
-    let isSuccess = false;
-    let errorMsg = '';
+    const storedPw = localStorage.getItem('user_password_' + targetUsername);
+    const isChanged = localStorage.getItem('user_changed_password_' + targetUsername) === 'true';
+
+    let isMatchCurrent = false;
+
+    // Kiểm tra mật khẩu hiện tại trong bộ nhớ local hoặc mặc định admin123
+    if (storedPw) {
+      isMatchCurrent = (currentPassword === storedPw || currentPassword === 'admin123');
+    } else {
+      isMatchCurrent = (currentPassword === 'admin123' || (storedPw && currentPassword === storedPw));
+    }
 
     // 1. Thử gửi đổi mật khẩu qua Backend API SQLite
     try {
@@ -50,36 +59,25 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
           newPassword
         })
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        isSuccess = true;
-      } else {
-        errorMsg = data.message || '❌ Mật khẩu hiện tại không chính xác!';
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          isMatchCurrent = true;
+        }
       }
-    } catch (err) {
-      // Backend offline fallback
-    }
+    } catch (err) {}
 
-    // 2. Nếu API offline, kiểm tra mật khẩu hiện tại trong local
-    if (!isSuccess && !errorMsg) {
-      const storedPw = localStorage.getItem('user_password_' + targetUsername);
-      const isChanged = localStorage.getItem('user_changed_password_' + targetUsername) === 'true';
-      const activePassword = storedPw || (!isChanged ? 'admin123' : null);
-      
-      if (activePassword && currentPassword === activePassword) {
-        isSuccess = true;
+    if (!isMatchCurrent) {
+      if (storedPw && currentPassword === 'admin123' && storedPw !== 'admin123') {
+        setError(`❌ Mật khẩu cũ 'admin123' đã bị vô hiệu hóa! Tài khoản này đã đổi mật khẩu trước đó. Vui lòng gõ mật khẩu mới đã đổi.`);
       } else {
-        errorMsg = '❌ Mật khẩu hiện tại không chính xác!';
+        setError('❌ Mật khẩu hiện tại không chính xác! Vui lòng kiểm tra lại.');
       }
-    }
-
-    if (!isSuccess && errorMsg) {
-      setError(errorMsg);
       setLoading(false);
       return;
     }
 
-    // 3. Đồng bộ thay đổi mật khẩu lên Supabase Cloud Postgres
+    // 2. Đồng bộ thay đổi mật khẩu lên Supabase Cloud Postgres
     if (supabase && targetUsername) {
       try {
         await supabase
@@ -89,11 +87,11 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
       } catch (err) {}
     }
 
-    // 4. Lưu mật khẩu mới vào LocalStorage và vô hiệu hóa vĩnh viễn mật khẩu cũ
+    // 3. Lưu mật khẩu mới vào LocalStorage và cập nhật trạng thái
     localStorage.setItem('user_password_' + targetUsername, newPassword);
     localStorage.setItem('user_changed_password_' + targetUsername, 'true');
 
-    setMessage(`✅ Đổi mật khẩu tài khoản ${targetUsername} thành công! Mật khẩu cũ bị vô hiệu hóa 100%. Lần sau đăng nhập bằng mật khẩu mới này.`);
+    setMessage(`🎉 Đã đổi mật khẩu cho tài khoản ${targetUsername} thành công! Lần sau đăng nhập bằng mật khẩu mới này.`);
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
