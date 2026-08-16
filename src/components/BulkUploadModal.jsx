@@ -73,16 +73,19 @@ export default function BulkUploadModal({ onClose, onBulkUploadSuccess }) {
       const item = fileList[i];
       setFileList(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'uploading' } : f));
 
-      // Tạo URL xem trước siêu nhanh không làm treo ứng dụng
-      let filePreviewUrl = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80';
-      try {
-        if (item.file && item.file.type && item.file.type.startsWith('image/')) {
+      // Kiểm tra tệp tin ảnh dựa theo MIME type hoặc phần mở rộng tệp (.png, .jpg, .jpeg, .webp, .gif)
+      const isImg = (item.file && item.file.type && item.file.type.startsWith('image/')) || 
+                    (item.file && item.file.name && /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(item.file.name));
+
+      let filePreviewUrl = '';
+      if (isImg && item.file) {
+        try {
           filePreviewUrl = URL.createObjectURL(item.file);
-        }
-      } catch (e) {}
+        } catch (e) {}
+      }
 
       const defaultAlbumCover = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80';
-      const safeDbImageUrl = filePreviewUrl || defaultAlbumCover;
+      const safeDbImageUrl = (filePreviewUrl && filePreviewUrl.length > 5) ? filePreviewUrl : defaultAlbumCover;
       const safeDbFileUrl = item.name;
 
       if (bulkType === 'resources') {

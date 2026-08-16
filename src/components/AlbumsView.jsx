@@ -4,10 +4,13 @@ import { Image, Eye, Calendar, Sparkles, Edit, Trash2 } from 'lucide-react';
 const DEFAULT_ALBUM_COVER = 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80';
 
 const getValidImageSrc = (src) => {
-  if (!src || src === '#' || src === 'file_attached' || (!src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:'))) {
+  if (!src || src === '#' || src === 'file_attached') {
     return DEFAULT_ALBUM_COVER;
   }
-  return src;
+  if (src.startsWith('http') || src.startsWith('/') || src.startsWith('data:') || src.startsWith('blob:')) {
+    return src;
+  }
+  return DEFAULT_ALBUM_COVER;
 };
 
 export default function AlbumsView({ albums = [], user, onUpdateAlbum, onDeleteAlbum }) {
