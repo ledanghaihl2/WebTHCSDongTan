@@ -82,15 +82,29 @@ export default function ChangePasswordModal({ user, onClose, onSuccess }) {
       try {
         const { data: existingUser } = await supabase.from('users').select('*').eq('username', targetUsername).maybeSingle();
         if (existingUser) {
-          await supabase.from('users').update({ password: newPassword }).eq('username', targetUsername);
+          await supabase.from('users').update({ 
+            password: newPassword,
+            updated_at: new Date().toISOString()
+          }).eq('username', targetUsername);
         } else {
           await supabase.from('users').insert([{
             username: targetUsername,
             password: newPassword,
             full_name: targetUsername === 'admin' ? 'Thầy Hiệu Trưởng - THCS Đồng Tân' : 'Giáo Viên THCS Đồng Tân',
             role: targetUsername === 'admin' ? 'BGH' : 'GIAO_VIEN',
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            updated_at: new Date().toISOString()
           }]);
+        }
+
+        // Cấu hình chuẩn Supabase Auth: Cập nhật mật khẩu Auth & Đăng xuất tất cả các thiết bị khác (scope: 'OTHERS')
+        try {
+          if (supabase.auth) {
+            await supabase.auth.updateUser({ password: newPassword });
+            await supabase.auth.signOut({ scope: 'OTHERS' });
+          }
+        } catch (authErr) {
+          console.log('Thông báo Supabase Auth signOut scope OTHERS:', authErr);
         }
       } catch (err) {
         console.error('Lỗi đồng bộ mật khẩu Supabase Cloud:', err);

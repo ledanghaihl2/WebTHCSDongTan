@@ -340,7 +340,23 @@ export default function App() {
       }
 
       if (usrData && usrData.length > 0) {
-        // Tự động đồng bộ mật khẩu mới nhất từ Supabase Cloud vào LocalStorage thiết bị
+        // 1. Kiểm tra cưỡng chế đăng xuất nếu tài khoản hiện tại bị đổi mật khẩu ở thiết bị khác
+        const currentSavedUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
+        if (currentSavedUser && currentSavedUser.username) {
+          const cleanUname = currentSavedUser.username.trim().toLowerCase();
+          const cloudMatch = usrData.find(u => u.username && u.username.trim().toLowerCase() === cleanUname);
+          if (cloudMatch && cloudMatch.password) {
+            const cachedPassword = localStorage.getItem('user_password_' + cleanUname);
+            if (cachedPassword && cloudMatch.password !== cachedPassword) {
+              console.log(`⚠️ Mật khẩu tài khoản ${cleanUname} đã bị thay đổi từ thiết bị khác. Cưỡng chế đăng xuất thiết bị này ngay lập tức!`);
+              handleLogout();
+              alert(`⚠️ CẢNH BÁO BẢO MẬT: Mật khẩu tài khoản "${cleanUname}" vừa được thay đổi từ một thiết bị khác. Hệ thống đã tự động đăng xuất thiết bị này để bảo mật. Vui lòng đăng nhập lại bằng mật khẩu mới!`);
+              return;
+            }
+          }
+        }
+
+        // 2. Tự động đồng bộ mật khẩu mới nhất từ Supabase Cloud vào LocalStorage thiết bị
         usrData.forEach(u => {
           if (u.username && u.password) {
             const uname = u.username.trim().toLowerCase();
