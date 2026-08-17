@@ -146,14 +146,12 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
               <button
                 type="button"
                 onClick={() => {
-                  const uname = 'hocsinh01';
-                  const pw = localStorage.getItem('user_password_' + uname) || 'admin123';
-                  setUsername(uname);
-                  setPassword(pw);
+                  setUsername('hocsinh01');
+                  setPassword('');
                   setError('');
                 }}
                 style={{ background: '#e0f2fe', border: '1px solid #7dd3fc', color: '#0369a1', padding: '6px 4px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer', textAlign: 'center' }}
-                title="Bấm để nạp sẵn tài khoản Học Sinh An 9A1"
+                title="Bấm để chọn tên tài khoản Học Sinh An 9A1 (Phải tự gõ mật khẩu)"
               >
                 🎓 Học Sinh
               </button>
