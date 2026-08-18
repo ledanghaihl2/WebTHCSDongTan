@@ -238,11 +238,14 @@ export default function AdminPortal({
           const u = users[0];
           let isPwValid = false;
           if (u.password) {
-            isPwValid = (password === u.password || password === storedPw);
+            isPwValid = (password === u.password);
           } else if (storedPw) {
             isPwValid = (password === storedPw);
           } else {
-            isPwValid = (password === 'admin123');
+            const isChanged = localStorage.getItem('user_changed_password_' + cleanUsername) === 'true';
+            if (!isChanged) {
+              isPwValid = (password === 'admin123');
+            }
           }
 
           if (isPwValid) {

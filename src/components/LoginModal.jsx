@@ -36,11 +36,14 @@ export default function LoginModal({ onClose, onLoginSuccess, onOpenRegister }) 
 
           let isPwValid = false;
           if (u.password) {
-            isPwValid = (cleanPassword === u.password || cleanPassword === storedPw);
+            isPwValid = (cleanPassword === u.password);
           } else if (storedPw) {
             isPwValid = (cleanPassword === storedPw);
           } else {
-            isPwValid = (cleanPassword === 'admin123');
+            const isChanged = localStorage.getItem('user_changed_password_' + cleanUsername) === 'true';
+            if (!isChanged) {
+              isPwValid = (cleanPassword === 'admin123');
+            }
           }
 
           if (isPwValid) {
